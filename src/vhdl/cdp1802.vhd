@@ -29,7 +29,6 @@ END cdp1802;
 ARCHITECTURE str OF cdp1802 IS
 
   SIGNAL rst       : STD_LOGIC;
-  SIGNAL tpb_i     : STD_LOGIC;
   SIGNAL addr_lohi : STD_LOGIC;
 
   SIGNAL float_DATA : STD_LOGIC;
@@ -90,13 +89,13 @@ ARCHITECTURE str OF cdp1802 IS
   SIGNAL Go_Idle   : STD_LOGIC;
 
   SIGNAL state     : STD_LOGIC_VECTOR(3 DOWNTO 0);
+  SIGNAL clk_cnt   : STD_LOGIC_VECTOR(2 DOWNTO 0);
 
 BEGIN
 
   DMA_IN  <= NOT nDMA_IN;
   DMA_OUT <= NOT nDMA_OUT;
   INT     <= NOT nINT;
-  TPB     <= tpb_i;
 
   u_control : ENTITY work.control
   PORT MAP (
@@ -109,7 +108,7 @@ BEGIN
     rst       => rst,
     sc        => SC,
     tpa       => TPA,
-    tpb       => tpb_i,
+    tpb       => TPB,
     nMRD      => nMRD,
     nMWR      => nMWR,
     addr_lohi => addr_lohi,
@@ -120,6 +119,7 @@ BEGIN
     preset_IE => preset_IE,
     reset_DATA => reset_DATA,
     state      => state,
+    clk_cnt_out => clk_cnt,
     Go_Idle    => Go_Idle
   );
 
@@ -127,7 +127,7 @@ BEGIN
   PORT MAP (
     clk       => CLOCK,
     state     => state,
-    tpb       => tpb_i,
+    clk_cnt   => clk_cnt,
     NtoR      => NtoR,
     XtoR      => XtoR,
     wr_A      => wr_A,

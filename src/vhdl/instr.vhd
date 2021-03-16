@@ -7,7 +7,7 @@ ENTITY instr IS
   PORT (
     clk        : IN  STD_LOGIC;
     state      : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
-    tpb        : IN  STD_LOGIC;
+    clk_cnt    : IN  STD_LOGIC_VECTOR(2 DOWNTO 0);
     NtoR       : OUT STD_LOGIC;
     XtoR       : OUT STD_LOGIC;
     wr_A       : OUT STD_LOGIC;
@@ -56,7 +56,7 @@ ARCHITECTURE str OF instr IS
 
 BEGIN
 
-  p_instr_comb : PROCESS(state, r, N_out, I_out, A_out, tpb)
+  p_instr_comb : PROCESS(state, r, N_out, I_out, A_out, clk_cnt)
     VARIABLE v : t_reg;
   BEGIN
       v := r;
@@ -65,7 +65,7 @@ BEGIN
       v.wr_A := '0';
       v.wr_I := '0';
       v.wr_N := '0';
-      v.mask_R := "00";
+      v.mask_R := "11";
       v.Go_Idle := '0';
       v.wr_Q := '0';
       v.float_DATA := '1';
@@ -74,24 +74,48 @@ BEGIN
       v.wr_R := '0';
 
       CASE state IS
-        WHEN c_state.S0_FETCH =>
-          v.mask_R := "11";  -- high and low
-          v.wr_A := '1'; -- R(P) -> A
-          v.wr_I := '1'; -- M(R(P)) -> I
-          v.wr_N := '1'; -- M(R(P)) -> N
-          IF tpb = '1' THEN
+        WHEN c_S0_FETCH =>
+          IF clk_cnt = "000" THEN
+              v.wr_A := '1'; -- R(P) -> A
+          ELSIF clk_cnt = "001" THEN
+              v.wr_I := '1'; -- M(R(P)) -> I
+              v.wr_N := '1'; -- M(R(P)) -> N
+          ELSIF clk_cnt = "010" THEN
               v.R_in := std_logic_vector(unsigned(A_out) + 1);
               v.wr_R := '1';
           END IF;
-        WHEN c_state.S1_RESET =>
-        WHEN c_state.S1_INIT =>
+        WHEN c_S1_RESET =>
+        WHEN c_S1_INIT =>
           -- R(P)
-        WHEN c_state.S1_EXEC =>
+        WHEN c_S1_EXEC =>
             -- Instruction decoding
             CASE I_out IS
               WHEN "0000" => -- 0x0N
                   IF N_out = "0000" THEN
                       v.Go_Idle := '1';
+                  END IF;
+              WHEN "0001" => -- 0x1N -> INC : R(N)+1
+                  v.NtoR := '1'; -- Select R(N)
+                  v.wr_A := '1'; -- R(N) -> A
+                  IF clk_cnt = "010" THEN
+                      v.R_in := std_logic_vector(unsigned(A_out) + 1);
+                      v.wr_R := '1';
+                  END IF;
+              WHEN "0010" => -- 0x2N -> DEC : R(N)-1
+                  v.NtoR := '1'; -- Select R(N)
+                  v.wr_A := '1'; -- R(N) -> A
+                  IF clk_cnt = "010" THEN
+                      v.R_in := std_logic_vector(unsigned(A_out) - 1);
+                      v.wr_R := '1';
+                  END IF;
+              WHEN "0110" =>
+                  IF N_out = "0000" THEN -- 0x60 -> IRX : R(X)+1
+                      v.XtoR := '1'; -- Select R(X)
+                      v.wr_A := '1'; -- R(X) -> A
+                      IF clk_cnt = "010" THEN
+                          v.R_in := std_logic_vector(unsigned(A_out) + 1);
+                          v.wr_R := '1';
+                      END IF;
                   END IF;
               WHEN "0111" => -- 0x7N
                   IF N_out = "1011" THEN    -- 0x7B -> SEQ
@@ -112,9 +136,9 @@ BEGIN
                   v.wr_X  := '1';
               WHEN OTHERS =>
             END CASE;
-        WHEN c_state.S1_IDLE =>
-        WHEN c_state.S2_DMA =>
-        WHEN c_state.S3_INTERRUPT =>
+        WHEN c_S1_IDLE =>
+        WHEN c_S2_DMA =>
+        WHEN c_S3_INTERRUPT =>
         WHEN OTHERS =>
       END CASE;
 

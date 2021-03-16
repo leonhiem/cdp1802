@@ -26,7 +26,6 @@ ARCHITECTURE str OF reg IS
 
 TYPE t_reg IS RECORD
     reg : STD_LOGIC_VECTOR(g_width-1 DOWNTO 0);
-    q   : STD_LOGIC_VECTOR(g_width-1 DOWNTO 0);
 END RECORD;
 
 SIGNAL r, nxt_r : t_reg;
@@ -34,18 +33,13 @@ SIGNAL r, nxt_r : t_reg;
 
 
 BEGIN
-  p_reg_comb : PROCESS(rst, r, wr, rd, d_in, preset)
+  p_reg_comb : PROCESS(rst, r, wr, d_in, preset)
     VARIABLE v : t_reg;
   BEGIN
       v := r;
-      v.q := (OTHERS => 'Z');
 
       IF wr = '1' THEN
           v.reg := d_in;
-      END IF;
-
-      IF rd = '1' THEN
-          v.q := r.reg;
       END IF;
 
       IF preset = '1' THEN
@@ -68,6 +62,6 @@ BEGIN
   END PROCESS;
 
   -- connect
-  d_out <= r.q;
+  d_out <= r.reg WHEN rd = '1' ELSE (OTHERS => 'Z');
 
 END str;
