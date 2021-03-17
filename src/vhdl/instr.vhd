@@ -82,6 +82,7 @@ BEGIN
               v.wr_N := '1'; -- M(R(P)) -> N
           ELSIF clk_cnt = "010" THEN
               v.R_in := std_logic_vector(unsigned(A_out) + 1);
+          ELSIF clk_cnt = "011" THEN -- 1 clk later is safer
               v.wr_R := '1';
           END IF;
         WHEN c_S1_RESET =>
@@ -94,46 +95,67 @@ BEGIN
                   IF N_out = "0000" THEN
                       v.Go_Idle := '1';
                   END IF;
-              WHEN "0001" => -- 0x1N -> INC : R(N)+1
+              WHEN "0001" => -- 0x1N : INC : R(N)+1
                   v.NtoR := '1'; -- Select R(N)
-                  v.wr_A := '1'; -- R(N) -> A
-                  IF clk_cnt = "010" THEN
+                  IF clk_cnt = "000" THEN
+                      v.wr_A := '1'; -- R(N) -> A
+                  ELSIF clk_cnt = "010" THEN
                       v.R_in := std_logic_vector(unsigned(A_out) + 1);
+                  ELSIF clk_cnt = "011" THEN
                       v.wr_R := '1';
                   END IF;
-              WHEN "0010" => -- 0x2N -> DEC : R(N)-1
+              WHEN "0010" => -- 0x2N : DEC : R(N)-1
                   v.NtoR := '1'; -- Select R(N)
-                  v.wr_A := '1'; -- R(N) -> A
-                  IF clk_cnt = "010" THEN
+                  IF clk_cnt = "000" THEN
+                      v.wr_A := '1'; -- R(N) -> A
+                  ELSIF clk_cnt = "010" THEN
                       v.R_in := std_logic_vector(unsigned(A_out) - 1);
+                  ELSIF clk_cnt = "011" THEN
                       v.wr_R := '1';
                   END IF;
               WHEN "0110" =>
-                  IF N_out = "0000" THEN -- 0x60 -> IRX : R(X)+1
+                  IF N_out = "0000" THEN -- 0x60 : IRX : R(X)+1
                       v.XtoR := '1'; -- Select R(X)
-                      v.wr_A := '1'; -- R(X) -> A
-                      IF clk_cnt = "010" THEN
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(X) -> A
+                      ELSIF clk_cnt = "010" THEN
                           v.R_in := std_logic_vector(unsigned(A_out) + 1);
+                      ELSIF clk_cnt = "011" THEN
                           v.wr_R := '1';
                       END IF;
                   END IF;
               WHEN "0111" => -- 0x7N
-                  IF N_out = "1011" THEN    -- 0x7B -> SEQ
+                  IF N_out = "1011" THEN    -- 0x7B : SEQ
                       v.Q_in  := '1';
-                      v.wr_Q  := '1';
-                  ELSIF N_out = "1010" THEN -- 0x7A -> REQ
+                      IF clk_cnt = "011" THEN
+                          v.wr_Q  := '1';
+                      END IF;
+                  ELSIF N_out = "1010" THEN -- 0x7A : REQ
                       v.Q_in  := '0';
-                      v.wr_Q  := '1';
+                      IF clk_cnt = "011" THEN
+                          v.wr_Q  := '1';
+                      END IF;
+                  END IF;
+              WHEN "1000" => -- 0x8N : GLO : R(N).0 -> D
+                  v.NtoR := '1'; -- Select R(N)
+                  IF clk_cnt = "000" THEN
+                      v.wr_A := '1'; -- R(N) -> A
+                  -- TODO
                   END IF;
               WHEN "1100" => -- 0xCN
-                  IF N_out = "0100" THEN -- 0xC4 -> NOP
+                  IF N_out = "0100" THEN -- 0xC4 : NOP
+                      -- NOP
                   END IF;
-              WHEN "1101" => -- 0xDN          -> SEP
+              WHEN "1101" => -- 0xDN : SEP
                   v.P_in := N_out;
-                  v.wr_P  := '1';
-              WHEN "1110" => -- 0xEN          -> SEX
+                  IF clk_cnt = "011" THEN
+                      v.wr_P  := '1';
+                  END IF;
+              WHEN "1110" => -- 0xEN : SEX
                   v.X_in  := N_out;
-                  v.wr_X  := '1';
+                  IF clk_cnt = "011" THEN
+                      v.wr_X  := '1';
+                  END IF;
               WHEN OTHERS =>
             END CASE;
         WHEN c_S1_IDLE =>

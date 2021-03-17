@@ -26,7 +26,6 @@ ARCHITECTURE str OF ff IS
 
 TYPE t_reg IS RECORD
     ff : STD_LOGIC;
-    q  : STD_LOGIC;
 END RECORD;
 
 SIGNAL r, nxt_r : t_reg;
@@ -34,18 +33,13 @@ SIGNAL r, nxt_r : t_reg;
 
 
 BEGIN
-  p_ff_comb : PROCESS(rst, r, wr, rd, d, preset)
+  p_ff_comb : PROCESS(rst, r, wr, d, preset)
     VARIABLE v : t_reg;
   BEGIN
       v := r;
-      v.q := 'Z';
 
       IF wr = '1' THEN
           v.ff := d;
-      END IF;
-
-      IF rd = '1' THEN
-          v.q := r.ff;
       END IF;
 
       IF preset = '1' THEN
@@ -68,6 +62,6 @@ BEGIN
   END PROCESS;
 
   -- connect
-  q <= r.q;
+  q <= r.ff WHEN rd = '1' ELSE 'Z';
 
 END str;
