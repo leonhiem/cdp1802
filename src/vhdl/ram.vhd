@@ -26,16 +26,16 @@ SIGNAL ram1 : ram_type:= (
   X"7A", -- 0x6: REQ
   X"E8", -- 0x7: SEX_8
   X"80", -- 0x8: GLO_0 : R(N).0 -> D  (N=0)
-  X"E3", -- 0x9: SEX_3
-  X"E4", -- 0xA: SEX_4
-  X"C4", -- 0xB: NOP
+  X"A3", -- 0x9: PLO_3 : D -> R(N).0  (N=3)
+  X"90", -- 0xA: GHI_0 : R(N).1 -> D  (N=0)
+  X"B3", -- 0xB: PHI_3 : D -> R(N).1  (N=3)
   X"7B", -- 0xC: SEQ
   X"C4", -- 0xD: NOP
   X"7A", -- 0xE: REQ
   X"C4", -- 0xF: NOP
   X"10", -- 0x10: INC_0 : R(N)+1  (skip)
   X"C4", -- 0x11: NOP (will be skipped)
-  X"C4", -- 0x12: NOP
+  X"E3", -- 0x12: SEX_3
   X"60", -- 0x13: IRX : R(X)+1
   X"C4", -- 0x14: NOP
   X"C4", -- 0x15: NOP

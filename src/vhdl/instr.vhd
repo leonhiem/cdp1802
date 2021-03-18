@@ -21,6 +21,9 @@ ENTITY instr IS
     Q_in       : OUT STD_LOGIC;
     wr_Q       : OUT STD_LOGIC;
     float_DATA : OUT STD_LOGIC;
+    A_sel_lohi : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+    wr_D       : OUT STD_LOGIC;
+    rd_D       : OUT STD_LOGIC;
     X_in       : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
     wr_X       : OUT STD_LOGIC;
     P_in       : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -44,6 +47,8 @@ ARCHITECTURE str OF instr IS
     Q_in     : STD_LOGIC;
     wr_Q     : STD_LOGIC;
     float_DATA : STD_LOGIC;
+    A_sel_lohi : STD_LOGIC_VECTOR(1 DOWNTO 0);
+    wr_D     : STD_LOGIC;
     X_in     : STD_LOGIC_VECTOR(3 DOWNTO 0);
     wr_X     : STD_LOGIC;
     P_in     : STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -69,6 +74,9 @@ BEGIN
       v.Go_Idle := '0';
       v.wr_Q := '0';
       v.float_DATA := '1';
+      v.A_sel_lohi := "00";
+      v.wr_D := '0';
+      v.rd_D := '0';
       v.wr_X := '0';
       v.wr_P := '0';
       v.wr_R := '0';
@@ -100,7 +108,7 @@ BEGIN
                   IF clk_cnt = "000" THEN
                       v.wr_A := '1'; -- R(N) -> A
                   ELSIF clk_cnt = "010" THEN
-                      v.R_in := std_logic_vector(unsigned(A_out) + 1);
+                      v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
                   ELSIF clk_cnt = "011" THEN
                       v.wr_R := '1';
                   END IF;
@@ -109,7 +117,7 @@ BEGIN
                   IF clk_cnt = "000" THEN
                       v.wr_A := '1'; -- R(N) -> A
                   ELSIF clk_cnt = "010" THEN
-                      v.R_in := std_logic_vector(unsigned(A_out) - 1);
+                      v.R_in := std_logic_vector(unsigned(A_out) - 1); -- A--
                   ELSIF clk_cnt = "011" THEN
                       v.wr_R := '1';
                   END IF;
@@ -119,29 +127,49 @@ BEGIN
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(X) -> A
                       ELSIF clk_cnt = "010" THEN
-                          v.R_in := std_logic_vector(unsigned(A_out) + 1);
+                          v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
                       ELSIF clk_cnt = "011" THEN
                           v.wr_R := '1';
                       END IF;
                   END IF;
               WHEN "0111" => -- 0x7N
                   IF N_out = "1011" THEN    -- 0x7B : SEQ
-                      v.Q_in  := '1';
+                      v.Q_in  := '1';       -- Q=1
                       IF clk_cnt = "011" THEN
                           v.wr_Q  := '1';
                       END IF;
                   ELSIF N_out = "1010" THEN -- 0x7A : REQ
-                      v.Q_in  := '0';
+                      v.Q_in  := '0';       -- Q=0
                       IF clk_cnt = "011" THEN
                           v.wr_Q  := '1';
                       END IF;
                   END IF;
               WHEN "1000" => -- 0x8N : GLO : R(N).0 -> D
                   v.NtoR := '1'; -- Select R(N)
+                  v.A_sel_lohi := "01"; -- select A.0
                   IF clk_cnt = "000" THEN
                       v.wr_A := '1'; -- R(N) -> A
-                  -- TODO
+                  ELSIF clk_cnt = "011" THEN
+                      v.wr_D := '1'; -- A.0 -> D
                   END IF;
+              WHEN "1001" => -- 0x9N : GHI : R(N).1 -> D
+                  v.NtoR := '1'; -- Select R(N)
+                  v.A_sel_lohi := "10"; -- select A.1
+                  IF clk_cnt = "000" THEN
+                      v.wr_A := '1'; -- R(N) -> A
+                  ELSIF clk_cnt = "011" THEN
+                      v.wr_D := '1'; -- A.1 -> D
+                  END IF;
+              WHEN "1010" => -- 0xAN : PLO : D -> R(N).0
+                  v.NtoR := '1'; -- Select R(N)
+                  v.mask_R := "01"; -- select R(N).0
+                  v.rd_D := '1';
+                  --v.R_in := -- TODO
+              WHEN "1011" => -- 0xBN : PHI : D -> R(N).1
+                  v.NtoR := '1'; -- Select R(N)
+                  v.mask_R := "10"; -- select R(N).1
+                  v.rd_D := '1';
+                  --v.R_in := -- TODO
               WHEN "1100" => -- 0xCN
                   IF N_out = "0100" THEN -- 0xC4 : NOP
                       -- NOP
@@ -149,12 +177,12 @@ BEGIN
               WHEN "1101" => -- 0xDN : SEP
                   v.P_in := N_out;
                   IF clk_cnt = "011" THEN
-                      v.wr_P  := '1';
+                      v.wr_P  := '1'; -- P=N
                   END IF;
               WHEN "1110" => -- 0xEN : SEX
                   v.X_in  := N_out;
                   IF clk_cnt = "011" THEN
-                      v.wr_X  := '1';
+                      v.wr_X  := '1'; -- X=N
                   END IF;
               WHEN OTHERS =>
             END CASE;
@@ -186,6 +214,9 @@ BEGIN
   wr_Q    <= r.wr_Q;
   Q_in    <= r.Q_in;
   float_DATA <= r.float_DATA;
+  A_sel_lohi <= r.A_sel_lohi;
+  wr_D   <= r.wr_D;
+  rd_D   <= r.rd_D;
   X_in   <= r.X_in;
   wr_X   <= r.wr_X;
   P_in   <= r.P_in;

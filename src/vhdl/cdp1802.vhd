@@ -30,6 +30,7 @@ ARCHITECTURE str OF cdp1802 IS
 
   SIGNAL rst       : STD_LOGIC;
   SIGNAL addr_lohi : STD_LOGIC;
+  SIGNAL A_sel_lohi : STD_LOGIC_VECTOR(1 DOWNTO 0);
 
   SIGNAL float_DATA : STD_LOGIC;
   SIGNAL reset_DATA : STD_LOGIC;
@@ -141,6 +142,9 @@ BEGIN
     Q_in      => Q_in,
     wr_Q      => wr_Q,
     float_DATA => float_DATA,
+    A_sel_lohi => A_sel_lohi,
+    wr_D      => wr_D,
+    rd_D      => rd_D,
     X_in      => X_in,
     wr_X      => wr_X,
     P_in      => P_in,
@@ -307,8 +311,10 @@ BEGIN
   u_amux_A : ENTITY work.amux
   PORT MAP (
     input   => A_out,
-    sel     => addr_lohi,
-    output  => ADDR
+    selA    => addr_lohi,
+    outputA => ADDR,
+    selD    => A_sel_lohi,
+    outputD => D_in
   );
 
   u_dmux_D : ENTITY work.dmux
