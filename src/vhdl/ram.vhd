@@ -30,15 +30,15 @@ SIGNAL ram1 : ram_type:= (
   X"90", -- 0xA: GHI_0 : R(N).1 -> D  (N=0)
   X"B3", -- 0xB: PHI_3 : D -> R(N).1  (N=3)
   X"03", -- 0xC: LDN_3 : M(R(N)) -> D (N=3)
-  X"C4", -- 0xD: NOP
-  X"7A", -- 0xE: REQ : Q=0
+  X"40", -- 0xD: LDA_0 : M(R(N)) -> D ; R(N)+1 (N=0)
+  X"7A", -- 0xE: REQ : Q=0 (will be skipped)
   X"C4", -- 0xF: NOP
   X"10", -- 0x10: INC_0 : R(N)+1  (skip)
   X"C4", -- 0x11: NOP (will be skipped)
   X"E3", -- 0x12: SEX_3
   X"60", -- 0x13: IRX : R(X)+1
-  X"F0", -- 0x14: LDX : M(R(X)) -> D
-  X"C4", -- 0x15: NOP
+  X"72", -- 0x14: LDXA : M(R(X)) -> D ; R(X)+1
+  X"F0", -- 0x15: LDX : M(R(X)) -> D
   X"7B", -- 0x16: SEQ : Q=1
   X"20"  -- 0x17: DEC_0 : R(N)-1  (repeating forever)
 );
