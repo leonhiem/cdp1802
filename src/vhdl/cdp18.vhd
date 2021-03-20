@@ -4,7 +4,7 @@ USE IEEE.numeric_std.ALL;
 USE work.cdp1802_pkg.ALL;
 
 
-ENTITY cs1800 IS
+ENTITY cdp18 IS
   PORT (
     CLOCK    : IN    STD_LOGIC;
     nWAIT    : IN    STD_LOGIC;
@@ -16,10 +16,10 @@ ENTITY cs1800 IS
     nDMA_OUT : IN    STD_LOGIC;
     nDMA_IN  : IN    STD_LOGIC
   );
-END cs1800;
+END cdp18;
 
 
-ARCHITECTURE str OF cs1800 IS
+ARCHITECTURE str OF cdp18 IS
 
   SIGNAL nmrd : STD_LOGIC;
   SIGNAL nmwr : STD_LOGIC;

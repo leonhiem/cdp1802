@@ -3,10 +3,10 @@ USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;
 
 
-ENTITY tb_cs1800 IS
-END tb_cs1800; 
+ENTITY tb_cdp18 IS
+END tb_cdp18; 
 
-ARCHITECTURE tb OF tb_cs1800 IS
+ARCHITECTURE tb OF tb_cdp18 IS
 
   CONSTANT clk_period   : TIME := 250 ns; -- 4 MHz
 
@@ -67,7 +67,7 @@ BEGIN
 
 
   -- device under test
-  u_dut : ENTITY work.cs1800
+  u_dut : ENTITY work.cdp18
   PORT MAP (
     CLOCK    => clk,
     nWAIT    => nWAIT,

@@ -22,6 +22,7 @@ ENTITY instr IS
     wr_Q       : OUT STD_LOGIC;
     float_DATA : OUT STD_LOGIC;
     A_sel_lohi : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+    D_out      : IN  STD_LOGIC_VECTOR(7 DOWNTO 0);
     wr_D       : OUT STD_LOGIC;
     rd_D       : OUT STD_LOGIC;
     X_in       : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -49,6 +50,7 @@ ARCHITECTURE str OF instr IS
     float_DATA : STD_LOGIC;
     A_sel_lohi : STD_LOGIC_VECTOR(1 DOWNTO 0);
     wr_D     : STD_LOGIC;
+    rd_D     : STD_LOGIC;
     X_in     : STD_LOGIC_VECTOR(3 DOWNTO 0);
     wr_X     : STD_LOGIC;
     P_in     : STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -61,7 +63,7 @@ ARCHITECTURE str OF instr IS
 
 BEGIN
 
-  p_instr_comb : PROCESS(state, r, N_out, I_out, A_out, clk_cnt)
+  p_instr_comb : PROCESS(state, r, N_out, I_out, A_out, clk_cnt, D_out)
     VARIABLE v : t_reg;
   BEGIN
       v := r;
@@ -164,12 +166,20 @@ BEGIN
                   v.NtoR := '1'; -- Select R(N)
                   v.mask_R := "01"; -- select R(N).0
                   v.rd_D := '1';
-                  --v.R_in := -- TODO
+                  IF clk_cnt = "010" THEN
+                      v.R_in(7 DOWNTO 0) := D_out; -- connect D
+                  ELSIF clk_cnt = "011" THEN
+                      v.wr_R := '1';
+                  END IF;
               WHEN "1011" => -- 0xBN : PHI : D -> R(N).1
                   v.NtoR := '1'; -- Select R(N)
                   v.mask_R := "10"; -- select R(N).1
                   v.rd_D := '1';
-                  --v.R_in := -- TODO
+                  IF clk_cnt = "010" THEN
+                      v.R_in(15 DOWNTO 8) := D_out; -- connect D
+                  ELSIF clk_cnt = "011" THEN
+                      v.wr_R := '1';
+                  END IF;
               WHEN "1100" => -- 0xCN
                   IF N_out = "0100" THEN -- 0xC4 : NOP
                       -- NOP

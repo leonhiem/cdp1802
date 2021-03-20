@@ -143,6 +143,7 @@ BEGIN
     wr_Q      => wr_Q,
     float_DATA => float_DATA,
     A_sel_lohi => A_sel_lohi,
+    D_out     => D_out,
     wr_D      => wr_D,
     rd_D      => rd_D,
     X_in      => X_in,
