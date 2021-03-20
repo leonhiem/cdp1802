@@ -88,6 +88,7 @@ ARCHITECTURE str OF cdp1802 IS
   SIGNAL DMA_OUT   : STD_LOGIC;
   SIGNAL INT       : STD_LOGIC;
   SIGNAL Go_Idle   : STD_LOGIC;
+  SIGNAL Do_MRD    : STD_LOGIC;
 
   SIGNAL state     : STD_LOGIC_VECTOR(3 DOWNTO 0);
   SIGNAL clk_cnt   : STD_LOGIC_VECTOR(2 DOWNTO 0);
@@ -121,7 +122,8 @@ BEGIN
     reset_DATA => reset_DATA,
     state      => state,
     clk_cnt_out => clk_cnt,
-    Go_Idle    => Go_Idle
+    Go_Idle    => Go_Idle,
+    Do_MRD     => Do_MRD
   );
 
   u_instr : ENTITY work.instr
@@ -139,6 +141,7 @@ BEGIN
     N_out     => N_out,
     I_out     => I_out,
     Go_Idle   => Go_Idle,
+    Do_MRD    => Do_MRD,
     Q_in      => Q_in,
     wr_Q      => wr_Q,
     float_DATA => float_DATA,

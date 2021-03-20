@@ -18,6 +18,7 @@ ENTITY instr IS
     N_out      : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
     I_out      : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
     Go_Idle    : OUT STD_LOGIC;
+    Do_MRD     : OUT STD_LOGIC;
     Q_in       : OUT STD_LOGIC;
     wr_Q       : OUT STD_LOGIC;
     float_DATA : OUT STD_LOGIC;
@@ -45,6 +46,7 @@ ARCHITECTURE str OF instr IS
     wr_N     : STD_LOGIC;
     mask_R   : STD_LOGIC_VECTOR(1 DOWNTO 0);
     Go_Idle  : STD_LOGIC;
+    Do_MRD   : STD_LOGIC;
     Q_in     : STD_LOGIC;
     wr_Q     : STD_LOGIC;
     float_DATA : STD_LOGIC;
@@ -74,6 +76,7 @@ BEGIN
       v.wr_N := '0';
       v.mask_R := "11";
       v.Go_Idle := '0';
+      v.Do_MRD  := '0';
       v.wr_Q := '0';
       v.float_DATA := '1';
       v.A_sel_lohi := "00";
@@ -102,8 +105,16 @@ BEGIN
             -- Instruction decoding
             CASE I_out IS
               WHEN "0000" => -- 0x0N
-                  IF N_out = "0000" THEN
+                  IF N_out = "0000" THEN -- IDL
                       v.Go_Idle := '1';
+                  ELSE -- LDN : M(R(N)) -> D; N!=0
+                      v.NtoR := '1'; -- Select R(N)
+                      v.Do_MRD := '1';
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(N) -> A
+                      ELSIF clk_cnt = "001" THEN
+                          v.wr_D := '1'; -- M(R(N)) -> D
+                      END IF;
                   END IF;
               WHEN "0001" => -- 0x1N : INC : R(N)+1
                   v.NtoR := '1'; -- Select R(N)
@@ -194,6 +205,16 @@ BEGIN
                   IF clk_cnt = "011" THEN
                       v.wr_X  := '1'; -- X=N
                   END IF;
+              WHEN "1111" =>
+                  IF N_out = "0000" THEN -- 0xF0 : LDX : M(R(X)) -> D
+                      v.XtoR := '1'; -- Select R(X)
+                      v.Do_MRD := '1';
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(X) -> A
+                      ELSIF clk_cnt = "001" THEN
+                          v.wr_D := '1'; -- M(R(X)) -> D
+                      END IF;
+                  END IF;
               WHEN OTHERS =>
             END CASE;
         WHEN c_S1_IDLE =>
@@ -221,6 +242,7 @@ BEGIN
   wr_N <= r.wr_N;
   mask_R <= r.mask_R;
   Go_Idle <= r.Go_Idle;
+  Do_MRD  <= r.Do_MRD;
   wr_Q    <= r.wr_Q;
   Q_in    <= r.Q_in;
   float_DATA <= r.float_DATA;

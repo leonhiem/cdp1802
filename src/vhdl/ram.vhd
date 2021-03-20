@@ -21,25 +21,25 @@ SIGNAL ram1 : ram_type:= (
   X"E3", -- 0x1: SEX_3
   X"E4", -- 0x2: SEX_4
   X"C4", -- 0x3: NOP
-  X"7B", -- 0x4: SEQ
+  X"7B", -- 0x4: SEQ : Q=1
   X"C4", -- 0x5: NOP
-  X"7A", -- 0x6: REQ
+  X"7A", -- 0x6: REQ : Q=0
   X"E8", -- 0x7: SEX_8
   X"80", -- 0x8: GLO_0 : R(N).0 -> D  (N=0)
   X"A3", -- 0x9: PLO_3 : D -> R(N).0  (N=3)
   X"90", -- 0xA: GHI_0 : R(N).1 -> D  (N=0)
   X"B3", -- 0xB: PHI_3 : D -> R(N).1  (N=3)
-  X"7B", -- 0xC: SEQ
+  X"03", -- 0xC: LDN_3 : M(R(N)) -> D (N=3)
   X"C4", -- 0xD: NOP
-  X"7A", -- 0xE: REQ
+  X"7A", -- 0xE: REQ : Q=0
   X"C4", -- 0xF: NOP
   X"10", -- 0x10: INC_0 : R(N)+1  (skip)
   X"C4", -- 0x11: NOP (will be skipped)
   X"E3", -- 0x12: SEX_3
   X"60", -- 0x13: IRX : R(X)+1
-  X"C4", -- 0x14: NOP
+  X"F0", -- 0x14: LDX : M(R(X)) -> D
   X"C4", -- 0x15: NOP
-  X"C4", -- 0x16: NOP
+  X"7B", -- 0x16: SEQ : Q=1
   X"20"  -- 0x17: DEC_0 : R(N)-1  (repeating forever)
 );
 
