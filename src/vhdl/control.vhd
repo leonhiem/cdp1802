@@ -30,7 +30,8 @@ ENTITY control IS
     state      : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
     clk_cnt_out: OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
     Go_Idle    : IN  STD_LOGIC;
-    Do_MRD     : IN  STD_LOGIC
+    Do_MRD     : IN  STD_LOGIC;
+    Do_MWR     : IN  STD_LOGIC
   );
 END control;
 
@@ -43,7 +44,7 @@ ARCHITECTURE str OF control IS
     rst        : STD_LOGIC;
     tpa        : STD_LOGIC;
     MRD        : STD_LOGIC;
-    nMWR       : STD_LOGIC;
+    MWR        : STD_LOGIC;
     wr_T       : STD_LOGIC;
     preset_P   : STD_LOGIC;
     preset_X   : STD_LOGIC;
@@ -109,9 +110,9 @@ BEGIN
             WHEN c_S1_RESET =>
                 v.tpa := '0';
                 w.tpb := '0';
-                v.rst  := '1';
-                v.MRD  := '0';
-                v.nMWR := '1';
+                v.rst := '1';
+                v.MRD := '0';
+                v.MWR := '0';
                 v.clk_cnt := 0;
                 v.reset_DATA := '1';
                 v.state := c_S1_INIT;
@@ -235,7 +236,7 @@ BEGIN
   tpa   <= r.tpa;
   tpb   <= f.tpb;
   nMRD  <= NOT (r.MRD OR Do_MRD);
-  nMWR  <= r.nMWR;
+  nMWR  <= NOT (r.MWR OR Do_MWR);
   wr_T  <= r.wr_T;
   preset_P  <= r.preset_P;
   preset_X  <= r.preset_X;
