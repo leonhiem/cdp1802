@@ -25,6 +25,7 @@ ENTITY instr IS
     float_DATA : OUT STD_LOGIC;
     A_sel_lohi : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
     D_out      : IN  STD_LOGIC_VECTOR(7 DOWNTO 0);
+    alu_oper   : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
     wr_D       : OUT STD_LOGIC;
     rd_D       : OUT STD_LOGIC;
     X_in       : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -53,6 +54,7 @@ ARCHITECTURE str OF instr IS
     wr_Q     : STD_LOGIC;
     float_DATA : STD_LOGIC;
     A_sel_lohi : STD_LOGIC_VECTOR(1 DOWNTO 0);
+    alu_oper   : STD_LOGIC_VECTOR(0 DOWNTO 0);
     wr_D     : STD_LOGIC;
     rd_D     : STD_LOGIC;
     X_in     : STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -83,6 +85,7 @@ BEGIN
       v.wr_Q := '0';
       v.float_DATA := '1';
       v.A_sel_lohi := "00";
+      v.alu_oper   := "0";
       v.wr_D := '0';
       v.rd_D := '0';
       v.wr_X := '0';
@@ -260,8 +263,30 @@ BEGIN
                       ELSIF clk_cnt = "001" THEN
                           v.wr_D := '1'; -- M(R(X)) -> D
                       END IF;
+                  ELSIF N_out = "0001" THEN -- 0xF1 : OR : M(R(X)) OR D -> D
+                      v.XtoR := '1'; -- Select R(X)
+                      v.Do_MRD := '1';
+                      v.rd_D := '1';
+                      v.alu_oper := c_ALU_OR;
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(X) -> A
+                      ELSIF clk_cnt = "001" THEN
+                          v.wr_D := '1'; -- M(R(X)) -> D
+                      END IF;
                   ELSIF N_out = "1000" THEN -- 0xF8 : LDI : M(R(P)) -> D; R(P)+1
                       v.Do_MRD := '1';
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(P) -> A
+                      ELSIF clk_cnt = "010" THEN
+                          v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
+                      ELSIF clk_cnt = "011" THEN
+                          v.wr_D := '1'; -- M(R(P)) -> D
+                          v.wr_R := '1';
+                      END IF;
+                  ELSIF N_out = "1001" THEN -- 0xF9 : ORI : M(R(P)) OR D -> D; R(P)+1
+                      v.Do_MRD := '1';
+                      v.rd_D := '1';
+                      v.alu_oper := c_ALU_OR;
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "010" THEN
@@ -304,6 +329,7 @@ BEGIN
   Q_in    <= r.Q_in;
   float_DATA <= r.float_DATA;
   A_sel_lohi <= r.A_sel_lohi;
+  alu_oper   <= r.alu_oper;
   wr_D   <= r.wr_D;
   rd_D   <= r.rd_D;
   X_in   <= r.X_in;

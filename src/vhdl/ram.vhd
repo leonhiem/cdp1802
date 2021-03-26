@@ -13,7 +13,7 @@ END ram;
 
 ARCHITECTURE str OF ram IS
 
-TYPE ram_type IS ARRAY (0 to 34) OF std_logic_vector(7 DOWNTO 0);
+TYPE ram_type IS ARRAY (0 to 52) OF std_logic_vector(7 DOWNTO 0);
 
 SIGNAL ram1 : ram_type:= (
 ---- Testprogram 1 (addr 0 to 28)
@@ -48,7 +48,7 @@ SIGNAL ram1 : ram_type:= (
 --  X"20", -- 0x1B: DEC_0 : R(N)-1  (repeating forever)
 --  X"00"  -- 0x1C: (will be overwritten by STXD)
 
--- Testprogram 2 (addr 0 to 34)
+-- Testprogram 2
 -- instr    addr mnemonic  description
   X"E2", -- 0x00: SEX_2
   X"7B", -- 0x01: SEQ
@@ -76,15 +76,35 @@ SIGNAL ram1 : ram_type:= (
   X"F0", -- 0x17: LDX   : M(R(X))->D      : D will be 0x1E
   X"13", -- 0x18: INC_3 : R(N)+1          : R(3) will be 0x0022
   X"53", -- 0x19: STR_3 : D->M(R(N))(N=3) : addr 0x22 will be 0x1E
-  X"7A", -- 0x1A: REQ
-  X"20", -- 0x1B: DEC_0 : R(N)-1          : (repeating forever)
+  X"13", -- 0x1A: INC_3 : R(N)+1          : R(3) will be 0x0023
+  X"D3", -- 0x1B: SEP_3 : N->P : switch PC to R(3); jumping to address 0x0023
   X"00", -- 0x1C: 0x00 : will be 0x1C
   X"00", -- 0x1D: 0x00 : will be 0x1C
   X"00", -- 0x1E: 0x00 : will be 0x1E
   X"00", -- 0x1F: 0x00 : will be 0x1E
   X"00", -- 0x20: 0x00 : will be 0x1E
   X"00", -- 0x21: 0x00 : will be 0x1E
-  X"00"  -- 0x22: 0x00 : will be 0x1E
+  X"00", -- 0x22: 0x00 : will be 0x1E
+  X"E2", -- 0x23:
+  X"93", -- 0x24: GHI_3 : R(N).1->D (N=3) : D will be 0
+  X"B2", -- 0x25: PHI_2 : D->R(N).1 (N=2) : R(2).1 will be 0
+  X"F8", -- 0x26: LDI 0x33 : M(R(P))->D; R(P)+1 : D will be 0x33
+  X"33", -- 0x27:
+  X"A2", -- 0x28: PLO_2 : D->R(N).0 (N=2)
+  X"F8", -- 0x29: M(R(P))->D; R(P)+1 : D will be 0x92
+  X"92", -- 0x2A:
+  X"F1", -- 0x2B: OR : M(R(X)) OR D -> D
+  X"52", -- 0x2C: STR_2 : D->M(R(N))(N=2) : addr M(R(2)) will be result of OR = 0xD7
+  X"12", -- 0x2D: INC_2 : R(N)+1
+  X"F9", -- 0x2E: ORI 0x28 : M(R(P)) OR D -> D; R(P)+1 : result is 0xFF
+  X"28", -- 0x2F:
+  X"52", -- 0x30: STR_2 : D->M(R(N))(N=2) : addr M(R(2)) will be result of OR = 0xFF
+  X"7A", -- 0x31: REQ
+  X"23", -- 0x32: DEC_3 : R(N)-1          : (repeating forever)
+
+  X"57", -- 0x33: 1st argument for OR = 0x57. will be 0xD7 after
+  X"00"  -- 0x34: 0x00 : will be 0xFF after ORI
+
 );
 
 BEGIN

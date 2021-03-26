@@ -21,6 +21,8 @@ PACKAGE cdp1802_pkg IS
   --                                                     |+-> SC0
   --                                                     +--> SC1
 
+  CONSTANT c_ALU_OR  : STD_LOGIC_VECTOR(0 DOWNTO 0) := "1";
+
 END cdp1802_pkg;
 
 PACKAGE BODY cdp1802_pkg IS
