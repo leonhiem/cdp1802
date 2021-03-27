@@ -6,7 +6,7 @@ USE work.cdp1802_pkg.ALL;
 
 ENTITY alu IS
   PORT (
-    oper   : IN  STD_LOGIC_vector(0 DOWNTO 0);
+    oper    : IN  STD_LOGIC_vector(1 DOWNTO 0);
    
     alu_in  : IN    STD_LOGIC_VECTOR(7 DOWNTO 0);
     alu_out : OUT   STD_LOGIC_VECTOR(7 DOWNTO 0);
@@ -27,6 +27,12 @@ BEGIN
     CASE oper IS
       WHEN c_ALU_OR =>
         alu_out <= d_in OR alu_in;
+        d_out <= (OTHERS => 'Z');
+      WHEN c_ALU_XOR =>
+        alu_out <= d_in XOR alu_in;
+        d_out <= (OTHERS => 'Z');
+      WHEN c_ALU_AND =>
+        alu_out <= d_in AND alu_in;
         d_out <= (OTHERS => 'Z');
       WHEN OTHERS =>
         alu_out <= d_in;

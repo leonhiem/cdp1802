@@ -21,7 +21,9 @@ PACKAGE cdp1802_pkg IS
   --                                                     |+-> SC0
   --                                                     +--> SC1
 
-  CONSTANT c_ALU_OR  : STD_LOGIC_VECTOR(0 DOWNTO 0) := "1";
+  CONSTANT c_ALU_OR  : STD_LOGIC_VECTOR(1 DOWNTO 0) := "01";
+  CONSTANT c_ALU_XOR : STD_LOGIC_VECTOR(1 DOWNTO 0) := "10";
+  CONSTANT c_ALU_AND : STD_LOGIC_VECTOR(1 DOWNTO 0) := "11";
 
 END cdp1802_pkg;
 
