@@ -69,7 +69,7 @@ ARCHITECTURE str OF cdp1802 IS
   SIGNAL D_out     : STD_LOGIC_VECTOR(7 DOWNTO 0);
   SIGNAL alu_in    : STD_LOGIC_VECTOR(7 DOWNTO 0);
   SIGNAL alu_out   : STD_LOGIC_VECTOR(7 DOWNTO 0);
-  SIGNAL alu_oper  : STD_LOGIC_VECTOR(2 DOWNTO 0);
+  SIGNAL alu_oper  : STD_LOGIC_VECTOR(3 DOWNTO 0);
   SIGNAL carry     : STD_LOGIC;
   SIGNAL wr_DF     : STD_LOGIC;
   SIGNAL DF_out    : STD_LOGIC;
@@ -356,7 +356,8 @@ BEGIN
     alu_out => alu_out,
     d_in    => D_in,
     d_out   => D_out,
-    carry   => carry
+    carry_in => DF_out,
+    carry_out => carry
   );
 
 END str;

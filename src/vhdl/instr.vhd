@@ -25,7 +25,7 @@ ENTITY instr IS
     float_DATA : OUT STD_LOGIC;
     A_sel_lohi : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
     D_out      : IN  STD_LOGIC_VECTOR(7 DOWNTO 0);
-    alu_oper   : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
+    alu_oper   : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
     wr_D       : OUT STD_LOGIC;
     rd_D       : OUT STD_LOGIC;
     wr_DF      : OUT STD_LOGIC;
@@ -55,7 +55,7 @@ ARCHITECTURE str OF instr IS
     wr_Q     : STD_LOGIC;
     float_DATA : STD_LOGIC;
     A_sel_lohi : STD_LOGIC_VECTOR(1 DOWNTO 0);
-    alu_oper   : STD_LOGIC_VECTOR(2 DOWNTO 0);
+    alu_oper   : STD_LOGIC_VECTOR(3 DOWNTO 0);
     wr_D     : STD_LOGIC;
     rd_D     : STD_LOGIC;
     wr_DF    : STD_LOGIC;
@@ -87,7 +87,7 @@ BEGIN
       v.wr_Q := '0';
       v.float_DATA := '1';
       v.A_sel_lohi := "00";
-      v.alu_oper   := "000";
+      v.alu_oper   := c_ALU_NOP;
       v.wr_D := '0';
       v.rd_D := '0';
       v.wr_DF := '0';
@@ -309,6 +309,17 @@ BEGIN
                           v.wr_A := '1'; -- R(X) -> A
                       ELSIF clk_cnt = "001" THEN
                           v.wr_D := '1'; -- M(R(X)) -> D
+                      END IF;
+                  ELSIF N_out = "0100" THEN -- 0xF4 : ADD : M(R(X)) + D -> DF, D
+                      v.XtoR := '1'; -- Select R(X)
+                      v.Do_MRD := '1';
+                      v.rd_D := '1';
+                      v.alu_oper := c_ALU_U_ADD;
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(X) -> A
+                      ELSIF clk_cnt = "011" THEN
+                          v.wr_D := '1'; -- M(R(X)) -> D
+                          v.wr_DF := '1'; -- carry -> DF
                       END IF;
                   ELSIF N_out = "0110" THEN -- 0xF6 : SHR : D >>= 1; LSB(D)->DF; 0->MSB(D)
                       v.rd_D := '1';
