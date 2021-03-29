@@ -57,7 +57,7 @@ BEGIN
     nCLEAR <= '1';
     nWAIT  <= '1';
 
-    FOR I IN 0 TO 700 LOOP
+    FOR I IN 0 TO 1000 LOOP
       WAIT UNTIL rising_edge(clk);
     END LOOP;
 

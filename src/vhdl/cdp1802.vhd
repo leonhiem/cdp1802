@@ -69,7 +69,10 @@ ARCHITECTURE str OF cdp1802 IS
   SIGNAL D_out     : STD_LOGIC_VECTOR(7 DOWNTO 0);
   SIGNAL alu_in    : STD_LOGIC_VECTOR(7 DOWNTO 0);
   SIGNAL alu_out   : STD_LOGIC_VECTOR(7 DOWNTO 0);
-  SIGNAL alu_oper  : STD_LOGIC_VECTOR(1 DOWNTO 0);
+  SIGNAL alu_oper  : STD_LOGIC_VECTOR(2 DOWNTO 0);
+  SIGNAL carry     : STD_LOGIC;
+  SIGNAL wr_DF     : STD_LOGIC;
+  SIGNAL DF_out    : STD_LOGIC;
 
   SIGNAL wr_R      : STD_LOGIC;
   SIGNAL addr_R    : STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -156,6 +159,7 @@ BEGIN
     alu_oper  => alu_oper,
     wr_D      => wr_D,
     rd_D      => rd_D,
+    wr_DF     => wr_DF,
     X_in      => X_in,
     wr_X      => wr_X,
     P_in      => P_in,
@@ -290,6 +294,14 @@ BEGIN
     rd    => rd_D
   );
 
+  u_DF : ENTITY work.ff
+  PORT MAP (
+    clk => CLOCK,
+    rst => rst,
+    wr  => wr_DF,
+    d   => carry,
+    q   => DF_out
+  );
 
   u_reg_R : ENTITY work.reg_R
   PORT MAP (
@@ -343,7 +355,8 @@ BEGIN
     alu_in  => alu_in,
     alu_out => alu_out,
     d_in    => D_in,
-    d_out   => D_out
+    d_out   => D_out,
+    carry   => carry
   );
 
 END str;

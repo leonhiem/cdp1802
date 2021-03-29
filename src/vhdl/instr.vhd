@@ -25,9 +25,10 @@ ENTITY instr IS
     float_DATA : OUT STD_LOGIC;
     A_sel_lohi : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
     D_out      : IN  STD_LOGIC_VECTOR(7 DOWNTO 0);
-    alu_oper   : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+    alu_oper   : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
     wr_D       : OUT STD_LOGIC;
     rd_D       : OUT STD_LOGIC;
+    wr_DF      : OUT STD_LOGIC;
     X_in       : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
     wr_X       : OUT STD_LOGIC;
     P_in       : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -54,9 +55,10 @@ ARCHITECTURE str OF instr IS
     wr_Q     : STD_LOGIC;
     float_DATA : STD_LOGIC;
     A_sel_lohi : STD_LOGIC_VECTOR(1 DOWNTO 0);
-    alu_oper   : STD_LOGIC_VECTOR(1 DOWNTO 0);
+    alu_oper   : STD_LOGIC_VECTOR(2 DOWNTO 0);
     wr_D     : STD_LOGIC;
     rd_D     : STD_LOGIC;
+    wr_DF    : STD_LOGIC;
     X_in     : STD_LOGIC_VECTOR(3 DOWNTO 0);
     wr_X     : STD_LOGIC;
     P_in     : STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -85,9 +87,10 @@ BEGIN
       v.wr_Q := '0';
       v.float_DATA := '1';
       v.A_sel_lohi := "00";
-      v.alu_oper   := "00";
+      v.alu_oper   := "000";
       v.wr_D := '0';
       v.rd_D := '0';
+      v.wr_DF := '0';
       v.wr_X := '0';
       v.wr_P := '0';
       v.wr_R := '0';
@@ -195,6 +198,13 @@ BEGIN
                           v.Do_MWR := '1';
                           v.wr_R := '1';
                       END IF;
+                  ELSIF N_out = "0110" THEN -- 0x76 : RSHR : D >>= 1; LSB(D)->DF; DF->MSB(D)
+                      v.rd_D := '1';
+                      v.alu_oper := c_ALU_RSHR;
+                      IF clk_cnt = "011" THEN
+                          v.wr_D  := '1'; -- alu_out -> D
+                          v.wr_DF := '1'; -- carry -> DF
+                      END IF;
                   ELSIF N_out = "1011" THEN    -- 0x7B : SEQ
                       v.Q_in  := '1';       -- Q=1
                       IF clk_cnt = "011" THEN
@@ -204,6 +214,13 @@ BEGIN
                       v.Q_in  := '0';       -- Q=0
                       IF clk_cnt = "011" THEN
                           v.wr_Q  := '1';
+                      END IF;
+                  ELSIF N_out = "1110" THEN -- 0x7E : RSHL : D >>= 1; MSB(D)->DF; DF->LSB(D)
+                      v.rd_D := '1';
+                      v.alu_oper := c_ALU_RSHL;
+                      IF clk_cnt = "011" THEN
+                          v.wr_D  := '1'; -- alu_out -> D
+                          v.wr_DF := '1'; -- carry -> DF
                       END IF;
                   END IF;
               WHEN "1000" => -- 0x8N : GLO : R(N).0 -> D
@@ -293,6 +310,13 @@ BEGIN
                       ELSIF clk_cnt = "001" THEN
                           v.wr_D := '1'; -- M(R(X)) -> D
                       END IF;
+                  ELSIF N_out = "0110" THEN -- 0xF6 : SHR : D >>= 1; LSB(D)->DF; 0->MSB(D)
+                      v.rd_D := '1';
+                      v.alu_oper := c_ALU_SHR;
+                      IF clk_cnt = "011" THEN
+                          v.wr_D  := '1'; -- alu_out -> D
+                          v.wr_DF := '1'; -- carry -> DF
+                      END IF;
                   ELSIF N_out = "1000" THEN -- 0xF8 : LDI : M(R(P)) -> D; R(P)+1
                       v.Do_MRD := '1';
                       IF clk_cnt = "000" THEN
@@ -339,6 +363,13 @@ BEGIN
                           v.wr_D := '1'; -- M(R(P)) -> D
                           v.wr_R := '1';
                       END IF;
+                  ELSIF N_out = "1110" THEN -- 0xFE : SHL : D <<= 1; MSB(D)->DF; 0->LSB(D)
+                      v.rd_D := '1';
+                      v.alu_oper := c_ALU_SHL;
+                      IF clk_cnt = "011" THEN
+                          v.wr_D  := '1'; -- alu_out -> D
+                          v.wr_DF := '1'; -- carry -> DF
+                      END IF;
                   END IF;
               WHEN OTHERS =>
             END CASE;
@@ -376,6 +407,7 @@ BEGIN
   alu_oper   <= r.alu_oper;
   wr_D   <= r.wr_D;
   rd_D   <= r.rd_D;
+  wr_DF  <= r.wr_DF;
   X_in   <= r.X_in;
   wr_X   <= r.wr_X;
   P_in   <= r.P_in;

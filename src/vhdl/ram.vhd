@@ -13,7 +13,7 @@ END ram;
 
 ARCHITECTURE str OF ram IS
 
-TYPE ram_type IS ARRAY (0 to 74) OF std_logic_vector(7 DOWNTO 0);
+TYPE ram_type IS ARRAY (0 to 98) OF std_logic_vector(7 DOWNTO 0);
 
 SIGNAL ram1 : ram_type:= (
 ---- Testprogram 1 (addr 0 to 28)
@@ -89,8 +89,8 @@ SIGNAL ram1 : ram_type:= (
   X"93", -- 0x24: GHI_3 : R(N).1->D (N=3) : D will be 0
   X"B2", -- 0x25: PHI_2 : D->R(N).1 (N=2) : R(2).1 will be 0
 
-  X"F8", -- 0x26: LDI 0x45 : M(R(P))->D; R(P)+1 : D will be 0x45
-  X"45", -- 0x27:
+  X"F8", -- 0x26: LDI 0x59 : M(R(P))->D; R(P)+1 : D will be 0x59
+  X"59", -- 0x27:
   X"A2", -- 0x28: PLO_2 : D->R(N).0 (N=2)
   X"F8", -- 0x29: M(R(P))->D; R(P)+1 : D will be 0x92
   X"92", -- 0x2A:
@@ -118,16 +118,40 @@ SIGNAL ram1 : ram_type:= (
   X"FA", -- 0x40: ANI 0xFF : M(R(P)) OR D -> D; R(P)+1 : result is 0x04
   X"FF", -- 0x41:
   X"52", -- 0x42: STR_2 : D->M(R(N))(N=2) : addr M(R(2)) will be result of ANI = 0x04
+  X"12", -- 0x43: INC_2 : R(N)+1
+  X"F8", -- 0x44: LDI 0x85 : M(R(P))->D; R(P)+1
+  X"85", -- 0x45:
+  X"F6", -- 0x46: SHR : D >>= 1; LSB(D)->DF; 0->MSB(D)
+  X"52", -- 0x47: STR_2 : D->M(R(N))(N=2) : addr M(R(2)) will be result of SHR
+  X"12", -- 0x48: INC_2 : R(N)+1
+  X"F8", -- 0x49: LDI 0x85 : M(R(P))->D; R(P)+1
+  X"85", -- 0x4A:
+  X"FE", -- 0x4B: SHL : D <<= 1; MSB(D)->DF; 0->LSB(D)
+  X"52", -- 0x4C: STR_2 : D->M(R(N))(N=2) : addr M(R(2)) will be result of SHL
+  X"12", -- 0x4D: INC_2 : R(N)+1
+  X"F8", -- 0x4E: LDI 0x85 : M(R(P))->D; R(P)+1
+  X"85", -- 0x4F:
+  X"76", -- 0x50: RSHR : D >>= 1; LSB(D)->DF; DF->MSB(D)
+  X"52", -- 0x51: STR_2 : D->M(R(N))(N=2) : addr M(R(2)) will be result of RSHR
+  X"12", -- 0x52: INC_2 : R(N)+1
+  X"F8", -- 0x53: LDI 0x85 : M(R(P))->D; R(P)+1
+  X"85", -- 0x54:
+  X"7E", -- 0x55: RSHL : D >>= 1; MSB(D)->DF; DF->LSB(D)
+  X"52", -- 0x56: STR_2 : D->M(R(N))(N=2) : addr M(R(2)) will be result of RSHL
 
-  X"7A", -- 0x43: REQ
-  X"23", -- 0x44: DEC_3 : R(N)-1          : (repeating forever)
+  X"7A", -- 0x57: REQ
+  X"23", -- 0x58: DEC_3 : R(N)-1          : (repeating forever)
 
-  X"57", -- 0x45: 1st argument for OR = 0x57. will be 0xD7 after
-  X"00", -- 0x46: 0x00 : will be 0xFF after ORI
-  X"00", -- 0x47: 0x00 : will be 0xCC after XOR
-  X"00", -- 0x48: 0x00 : will be 0xE4 after XRI
-  X"00", -- 0x49: 0x00 : will be 0x04 after AND
-  X"00"  -- 0x4A: 0x00 : will be 0x04 after ANI
+  X"57", -- 0x59: 1st argument for OR = 0x57. will be 0xD7 after
+  X"00", -- 0x5A: 0x00 : will be 0xFF after ORI
+  X"00", -- 0x5B: 0x00 : will be 0xCC after XOR
+  X"00", -- 0x5C: 0x00 : will be 0xE4 after XRI
+  X"00", -- 0x5D: 0x00 : will be 0x04 after AND
+  X"00", -- 0x5E: 0x00 : will be 0x04 after ANI
+  X"00", -- 0x5F: 0x00 : will be 0x42 after SHR
+  X"00", -- 0x60: 0x00 : will be 0x0A after SHL
+  X"00", -- 0x61: 0x00 : will be 0xC2 after RSHR
+  X"00"  -- 0x62: 0x00 : will be 0x0B after RSHL
 
 );
 
