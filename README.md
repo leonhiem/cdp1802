@@ -15,7 +15,7 @@ The testbenches in the directory tb/vhdl can be used in simulation
 # License
 MIT
 
-# Simulation instructions (at Astron)
+# Simulation instructions (RadioHDL at Astron)
 Bash:
 
 `modelsim_config unb2c -v1`
@@ -34,4 +34,4 @@ double click testbence `tb_cdp18.vhd`
 
 `as 10`
 
-`run 400us`
+`run 500us`

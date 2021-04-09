@@ -52,6 +52,8 @@ BEGIN
       -- arithmetic operations:
       WHEN c_ALU_U_ADD => -- unsigned addition
         tmp <= std_logic_vector(unsigned('0' & d_in) + unsigned('0' & alu_in));
+      WHEN c_ALU_U_ADC => -- unsigned addition with carry
+        tmp <= std_logic_vector(unsigned('0' & d_in) + unsigned('0' & alu_in) + unsigned'('0' & carry_in));
 
       WHEN OTHERS => -- c_ALU_NOP
         tmp <= "0" & d_in;

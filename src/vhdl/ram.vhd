@@ -13,7 +13,7 @@ END ram;
 
 ARCHITECTURE str OF ram IS
 
-TYPE ram_type IS ARRAY (0 to 104) OF std_logic_vector(7 DOWNTO 0);
+TYPE ram_type IS ARRAY (0 to 120) OF std_logic_vector(7 DOWNTO 0);
 
 SIGNAL ram1 : ram_type:= (
 ---- Testprogram 1 (addr 0 to 28)
@@ -89,8 +89,8 @@ SIGNAL ram1 : ram_type:= (
   X"93", -- 0x24: GHI_3 : R(N).1->D (N=3) : D will be 0
   X"B2", -- 0x25: PHI_2 : D->R(N).1 (N=2) : R(2).1 will be 0
 
-  X"F8", -- 0x26: LDI 0x5E : M(R(P))->D; R(P)+1 : D will be 0x5E
-  X"5E", -- 0x27:
+  X"F8", -- 0x26: LDI 0x62 : M(R(P))->D; R(P)+1 : D will be 0x6B
+  X"6B", -- 0x27:
   X"A2", -- 0x28: PLO_2 : D->R(N).0 (N=2)
   X"F8", -- 0x29: M(R(P))->D; R(P)+1 : D will be 0x92
   X"92", -- 0x2A:
@@ -143,22 +143,41 @@ SIGNAL ram1 : ram_type:= (
   X"F4", -- 0x59: ADD : M(R(X))+D -> DF, D : 0x3A + 0xF0 = 0x12A
   X"12", -- 0x5A: INC_2 : R(N)+1
   X"52", -- 0x5B: STR_2 : D->M(R(N))(N=2) : addr M(R(2)) will be result of ADD
+  X"12", -- 0x5C: INC_2 : R(N)+1
+  X"FC", -- 0x5D: ADI 0xF0 : M(R(P)) + D -> DF,D; R(P)+1 : result is 0x11A
+  X"F0", -- 0x5E:
+  X"52", -- 0x5F: STR_2 : D->M(R(N))(N=2) : addr M(R(2)) will be result of ADI
+
+  X"12", -- 0x60: INC_2 : R(N)+1
+  X"F8", -- 0x61: LDI 0x2D : M(R(P))->D; R(P)+1
+  X"2D", -- 0x62:
+  X"74", -- 0x63: ADC : M(R(X))+D+DF -> DF, D : 0x3A + 0x2D + DF=1 = 0x68, DF=0
+  X"52", -- 0x64: STR_2 : D->M(R(N))(N=2) : addr M(R(2)) will be result of ADC
+
+  X"12", -- 0x65: INC_2 : R(N)+1
+  X"7C", -- 0x66: ADCI 0xF0 : M(R(P))+D+DF -> DF,D; R(P)+1 : result is 0x58, DF=1 
+  X"F0", -- 0x67:
+  X"52", -- 0x68: STR_2 : D->M(R(N))(N=2) : addr M(R(2)) will be result of ADCI
 
 
-  X"7A", -- 0x5C: REQ
-  X"23", -- 0x5D: DEC_3 : R(N)-1          : (repeating forever)
+  X"7A", -- 0x69: REQ
+  X"23", -- 0x6A: DEC_3 : R(N)-1          : (repeating forever)
 
-  X"57", -- 0x5E: 1st argument for OR = 0x57. will be 0xD7 after
-  X"00", -- 0x5F: 0x00 : will be 0xFF after ORI
-  X"00", -- 0x60: 0x00 : will be 0xCC after XOR
-  X"00", -- 0x61: 0x00 : will be 0xE4 after XRI
-  X"00", -- 0x62: 0x00 : will be 0x04 after AND
-  X"00", -- 0x63: 0x00 : will be 0x04 after ANI
-  X"00", -- 0x64: 0x00 : will be 0x42 after SHR
-  X"00", -- 0x65: 0x00 : will be 0x0A after SHL
-  X"00", -- 0x66: 0x00 : will be 0xC2 after RSHR
-  X"00", -- 0x67: 0x00 : will be 0x3A after RSHL
-  X"00"  -- 0x68: 0x00 : will be 0x2A after ADD
+  X"57", -- 0x6B: 1st argument for OR = 0x57. will be 0xD7 after
+  X"00", -- 0x6C: 0x00 : will be 0xFF after ORI
+  X"00", -- 0x6D: 0x00 : will be 0xCC after XOR
+  X"00", -- 0x6E: 0x00 : will be 0xE4 after XRI
+  X"00", -- 0x6F: 0x00 : will be 0x04 after AND
+  X"00", -- 0x70: 0x00 : will be 0x04 after ANI
+  X"00", -- 0x71: 0x00 : will be 0x42 after SHR
+  X"00", -- 0x72: 0x00 : will be 0x0A after SHL
+  X"00", -- 0x73: 0x00 : will be 0xC2 after RSHR
+  X"00", -- 0x74: 0x00 : will be 0x3A after RSHL
+  X"00", -- 0x75: 0x00 : will be 0x2A after ADD
+  X"00", -- 0x76: 0x00 : will be 0x1A after ADI
+
+  X"3A", -- 0x77: 0x00 : will be 0x68 after ADC
+  X"00"  -- 0x78: 0x00 : will be 0x58 after ADCI
 
 );
 
