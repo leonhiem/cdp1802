@@ -209,6 +209,17 @@ BEGIN
                           v.wr_D := '1'; -- M(R(X)) -> D
                           v.wr_DF := '1'; -- carry -> DF
                       END IF;
+                  ELSIF N_out = "0101" THEN -- 0x75 : SDB : M(R(X)) - D - (NOT DF) -> DF, D
+                      v.XtoR := '1'; -- Select R(X)
+                      v.Do_MRD := '1';
+                      v.rd_D := '1';
+                      v.alu_oper := c_ALU_S_SUBB;
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(X) -> A
+                      ELSIF clk_cnt = "011" THEN
+                          v.wr_D := '1'; -- M(R(X)) -> D
+                          v.wr_DF := '1'; -- carry -> DF
+                      END IF;
                   ELSIF N_out = "0110" THEN -- 0x76 : RSHR : D >>= 1; LSB(D)->DF; DF->MSB(D)
                       v.rd_D := '1';
                       v.alu_oper := c_ALU_RSHR;
@@ -230,6 +241,19 @@ BEGIN
                       v.Do_MRD := '1';
                       v.rd_D := '1';
                       v.alu_oper := c_ALU_U_ADC;
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(P) -> A
+                      ELSIF clk_cnt = "010" THEN
+                          v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
+                      ELSIF clk_cnt = "011" THEN
+                          v.wr_D := '1'; -- M(R(P)) -> D
+                          v.wr_DF := '1'; -- carry -> DF
+                          v.wr_R := '1';
+                      END IF;
+                  ELSIF N_out = "1101" THEN -- 0x7D : SDBI : M(R(P)) - D - (NOT DF) -> DF,D; R(P)+1
+                      v.Do_MRD := '1';
+                      v.rd_D := '1';
+                      v.alu_oper := c_ALU_S_SUBB;
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "010" THEN
@@ -345,6 +369,17 @@ BEGIN
                           v.wr_D := '1'; -- M(R(X)) -> D
                           v.wr_DF := '1'; -- carry -> DF
                       END IF;
+                  ELSIF N_out = "0101" THEN -- 0xF5 : SD : M(R(X)) - D -> DF, D
+                      v.XtoR := '1'; -- Select R(X)
+                      v.Do_MRD := '1';
+                      v.rd_D := '1';
+                      v.alu_oper := c_ALU_S_SUB;
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(X) -> A
+                      ELSIF clk_cnt = "011" THEN
+                          v.wr_D := '1'; -- M(R(X)) -> D
+                          v.wr_DF := '1'; -- carry -> DF
+                      END IF;
                   ELSIF N_out = "0110" THEN -- 0xF6 : SHR : D >>= 1; LSB(D)->DF; 0->MSB(D)
                       v.rd_D := '1';
                       v.alu_oper := c_ALU_SHR;
@@ -402,6 +437,19 @@ BEGIN
                       v.Do_MRD := '1';
                       v.rd_D := '1';
                       v.alu_oper := c_ALU_U_ADD;
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(P) -> A
+                      ELSIF clk_cnt = "010" THEN
+                          v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
+                      ELSIF clk_cnt = "011" THEN
+                          v.wr_D := '1'; -- M(R(P)) -> D
+                          v.wr_DF := '1'; -- carry -> DF
+                          v.wr_R := '1';
+                      END IF;
+                  ELSIF N_out = "1101" THEN -- 0xFD : SDI : M(R(P)) - D -> DF,D; R(P)+1
+                      v.Do_MRD := '1';
+                      v.rd_D := '1';
+                      v.alu_oper := c_ALU_S_SUB;
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "010" THEN

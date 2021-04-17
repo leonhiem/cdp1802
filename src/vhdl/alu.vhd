@@ -1,7 +1,6 @@
 LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;
---USE IEEE.std_logic_arith.ALL;
 USE work.cdp1802_pkg.ALL;
 
 
@@ -55,6 +54,12 @@ BEGIN
       WHEN c_ALU_U_ADC => -- unsigned addition with carry
         tmp <= std_logic_vector(unsigned('0' & d_in) + unsigned('0' & alu_in) + unsigned'('0' & carry_in));
 
+      WHEN c_ALU_S_SUB => -- signed subtract (2 complement)
+        tmp <= std_logic_vector(unsigned('0' & d_in) + unsigned('0' & NOT(alu_in)) + unsigned'('0' & '1'));
+      WHEN c_ALU_S_SUBB => -- signed subtract with borrow (2 complement)
+        --tmp <= std_logic_vector(unsigned('0' & d_in) + unsigned('0' & NOT(alu_in)) + unsigned'('0' & NOT(carry_in)));
+        tmp <= std_logic_vector(unsigned('0' & d_in) + unsigned('0' & NOT(alu_in)) + unsigned'('0' & carry_in));
+
       WHEN OTHERS => -- c_ALU_NOP
         tmp <= "0" & d_in;
         d_out <= alu_in;
@@ -66,3 +71,6 @@ BEGIN
   carry_out <= tmp(8);
 
 END str;
+
+        --tmp <= std_logic_vector(resize(signed(d_in), tmp'length) - resize(signed(alu_in), tmp'length)); -- can't use for the 1802
+        --tmp <= std_logic_vector(resize(signed(d_in), tmp'length) - resize(signed(alu_in), tmp'length) - signed'('0' & NOT(carry_in)));
