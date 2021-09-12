@@ -14,7 +14,7 @@ END ram;
 
 ARCHITECTURE str OF ram IS
 
-TYPE ram_type IS ARRAY (0 to 148) OF std_logic_vector(7 DOWNTO 0);
+TYPE ram_type IS ARRAY (0 to 174) OF std_logic_vector(7 DOWNTO 0);
 
 SIGNAL ram1 : ram_type:= (
 -- Testprogram
@@ -61,7 +61,7 @@ SIGNAL ram1 : ram_type:= (
   -- OR
   c_LDI,   -- 0x26: M(R(P))->D; R(P)+1 : D will be:
 
-  X"82",   -- 0x27: <------------- point to data <--------- !!!
+  X"98",   -- 0x27: <------------- point to data <--------- !!!
 
   c_PLO_2, -- 0x28: D->R(N).0 (N=2)
   c_LDI,   -- 0x29: M(R(P))->D; R(P)+1 : D will be 0x92
@@ -188,32 +188,67 @@ SIGNAL ram1 : ram_type:= (
   X"F0",   -- 0x7E:
   c_STR_2, -- 0x7F: D->M(R(N))(N=2) : addr M(R(2)) will be result of SDI
 
+
+  -- SM
+  c_INC_2, -- 0x80: R(N)+1
+  c_LDI,   -- 0x81: M(R(P))->D; R(P)+1
+  X"92",   -- 0x82:
+  c_SM,    -- 0x83: D-M(R(X)) -> DF, D : 0x92 - 0x57 = 0x3B, DF=1
+  c_STR_2, -- 0x84: D->M(R(N))(N=2) : addr M(R(2)) will be result of SD
+
+  -- SMBI
+  c_INC_2, -- 0x85: R(N)+1
+  c_LDI,   -- 0x86: M(R(P))->D; R(P)+1
+  X"71",   -- 0x87:
+  c_SMBI,  -- 0x88: D-M(R(P)) - (NOT DF) -> DF,D; R(P)+1 : 0x71 - 0xF2 - DF=1 (borrow=0) = 0x7F, DF=0 (borrow=1)
+  X"F2",   -- 0x89:
+  c_STR_2, -- 0x8A: D->M(R(N))(N=2) : addr M(R(2)) will be result of SMBI
+
+  -- SMB
+  c_INC_2, -- 0x8B: R(N)+1
+  c_LDI,   -- 0x8C: M(R(P))->D; R(P)+1
+  X"4A",   -- 0x8D:
+  c_SMB,   -- 0x8E: D-M(R(X))-(NOT DF) -> DF, D : 0x4A - 0xC1 - DF=0 (borrow=1) = 0x88, DF=0 (borrow=1)
+  c_STR_2, -- 0x8F: D->M(R(N))(N=2) : addr M(R(2)) will be result of SMB
+
+  -- SMI
+  c_INC_2, -- 0x90: R(N)+1
+  c_LDI,   -- 0x91: M(R(P))->D; R(P)+1
+  X"1B",   -- 0x92:
+  c_SMI,   -- 0x93: D-M(R(P)) -> DF,D; R(P)+1 : 0x1B - 0x1A = 0x01, DF=1 (borrow=0)
+  X"1A",   -- 0x94:
+  c_STR_2, -- 0x95: D->M(R(N))(N=2) : addr M(R(2)) will be result of SMI
+
   -- end program
-  c_REQ,   -- 0x80: Q=0
-  c_DEC_3, -- 0x81: R(N)-1          : (repeating forever)
+  c_REQ,   -- 0x96: Q=0
+  c_DEC_3, -- 0x97: R(N)-1          : (repeating forever)
 
 
   -- data
-  X"57", -- 0x82: 1st argument for OR = 0x57. will be 0xD7 after
-  X"00", -- 0x83: 0x00 : will be 0xFF after ORI
-  X"00", -- 0x84: 0x00 : will be 0xCC after XOR
-  X"00", -- 0x85: 0x00 : will be 0xE4 after XRI
-  X"00", -- 0x86: 0x00 : will be 0x04 after AND
-  X"00", -- 0x87: 0x00 : will be 0x04 after ANI
-  X"00", -- 0x88: 0x00 : will be 0x42 after SHR
-  X"00", -- 0x89: 0x00 : will be 0x0A after SHL
-  X"00", -- 0x8A: 0x00 : will be 0xC2 after RSHR
-  X"00", -- 0x8B: 0x00 : will be 0x3A after RSHL
-  X"00", -- 0x8C: 0x00 : will be 0x2A after ADD
-  X"00", -- 0x8D: 0x00 : will be 0x1A after ADI
-  X"3A", -- 0x8E: 0x00 : will be 0x68 after ADC
-  X"00", -- 0x8F: 0x00 : will be 0x58 after ADCI
+  X"57", -- 0x98: 1st argument for OR = 0x57. will be 0xD7 after
+  X"00", -- 0x99: 0x00 : will be 0xFF after ORI
+  X"00", -- 0x9A: 0x00 : will be 0xCC after XOR
+  X"00", -- 0x9B: 0x00 : will be 0xE4 after XRI
+  X"00", -- 0x9C: 0x00 : will be 0x04 after AND
+  X"00", -- 0x9D: 0x00 : will be 0x04 after ANI
+  X"00", -- 0x9E: 0x00 : will be 0x42 after SHR
+  X"00", -- 0x9F: 0x00 : will be 0x0A after SHL
+  X"00", -- 0xA0: 0x00 : will be 0xC2 after RSHR
+  X"00", -- 0xA1: 0x00 : will be 0x3A after RSHL
+  X"00", -- 0xA2: 0x00 : will be 0x2A after ADD
+  X"00", -- 0xA3: 0x00 : will be 0x1A after ADI
+  X"3A", -- 0xA4: 0x00 : will be 0x68 after ADC
+  X"00", -- 0xA5: 0x00 : will be 0x58 after ADCI
 
-  X"42", -- 0x90: 0x00 : will be 0x34 after SD
-  X"57", -- 0x91: 0x00 : will be 0xC5 after SD
-  X"40", -- 0x92: 0x00 : will be 0x1F after SDB
-  X"00", -- 0x93: 0x00 : will be 0xD1 after SDI
-  X"00"  -- 0x94: 0x00 : will be 0x1F after SDBI
+  X"42", -- 0xA6: 0x00 : will be 0x34 after SD
+  X"57", -- 0xA7: 0x00 : will be 0xC5 after SD
+  X"40", -- 0xA8: 0x00 : will be 0x1F after SDB
+  X"00", -- 0xA9: 0x00 : will be 0xD1 after SDI
+  X"00", -- 0xAA: 0x00 : will be 0x1F after SDBI
+  X"57", -- 0xAB: 0x00 : will be 0x3B after SM
+  X"00", -- 0xAC: 0x00 : will be 0x7F after SMBI
+  X"C1", -- 0xAD: 0x00 : will be 0x88 after SMB
+  X"00"  -- 0xAE: 0x00 : will be 0x01 after SMI
 
 );
 
