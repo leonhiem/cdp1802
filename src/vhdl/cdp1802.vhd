@@ -156,6 +156,7 @@ BEGIN
     float_DATA => float_DATA,
     A_sel_lohi => A_sel_lohi,
     D_out     => D_out,
+    D_in      => D_in,
     alu_oper  => alu_oper,
     wr_D      => wr_D,
     rd_D      => rd_D,

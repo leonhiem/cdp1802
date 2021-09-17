@@ -25,6 +25,7 @@ ENTITY instr IS
     float_DATA : OUT STD_LOGIC;
     A_sel_lohi : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
     D_out      : IN  STD_LOGIC_VECTOR(7 DOWNTO 0);
+    D_in       : IN  STD_LOGIC_VECTOR(7 DOWNTO 0);
     alu_oper   : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
     wr_D       : OUT STD_LOGIC;
     rd_D       : OUT STD_LOGIC;
@@ -71,7 +72,7 @@ ARCHITECTURE str OF instr IS
 
 BEGIN
 
-  p_instr_comb : PROCESS(state, r, N_out, I_out, A_out, clk_cnt, D_out)
+  p_instr_comb : PROCESS(state, r, N_out, I_out, A_out, clk_cnt, D_out, D_in)
     VARIABLE v : t_reg;
   BEGIN
       v := r;
@@ -142,6 +143,18 @@ BEGIN
                       v.R_in := std_logic_vector(unsigned(A_out) - 1); -- A--
                   ELSIF clk_cnt = "011" THEN
                       v.wr_R := '1';
+                  END IF;
+              WHEN "0011" => -- 0x3N
+                  v.mask_R := "01"; -- select R(P).0
+                  IF N_out = "0000" THEN -- 0x30 : BR : M(R(P)) -> R(P).0
+                      v.Do_MRD := '1';
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(P) -> A
+                      ELSIF clk_cnt = "010" THEN
+                          v.R_in(7 DOWNTO 0) := D_in; -- connect M(R(P))
+                      ELSIF clk_cnt = "011" THEN
+                          v.wr_R := '1';
+                      END IF;
                   END IF;
               WHEN "0100" => -- 0x4N : LDA : M(R(N)) -> D ; R(N)+1
                   v.NtoR := '1'; -- Select R(N)

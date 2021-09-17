@@ -14,7 +14,7 @@ END ram;
 
 ARCHITECTURE str OF ram IS
 
-TYPE ram_type IS ARRAY (0 to 174) OF std_logic_vector(7 DOWNTO 0);
+TYPE ram_type IS ARRAY (0 to 176) OF std_logic_vector(7 DOWNTO 0);
 
 SIGNAL ram1 : ram_type:= (
 -- Testprogram
@@ -219,10 +219,9 @@ SIGNAL ram1 : ram_type:= (
   X"1A",   -- 0x94:
   c_STR_2, -- 0x95: D->M(R(N))(N=2) : addr M(R(2)) will be result of SMI
 
-  -- end program
-  c_REQ,   -- 0x96: Q=0
-  c_DEC_3, -- 0x97: R(N)-1          : (repeating forever)
 
+  c_BR,    -- 0x96: M(R(P))->R(P).0 : Unconditional short branch
+  X"AF",   -- 0x97:
 
   -- data
   X"57", -- 0x98: 1st argument for OR = 0x57. will be 0xD7 after
@@ -248,7 +247,11 @@ SIGNAL ram1 : ram_type:= (
   X"57", -- 0xAB: 0x00 : will be 0x3B after SM
   X"00", -- 0xAC: 0x00 : will be 0x7F after SMBI
   X"C1", -- 0xAD: 0x00 : will be 0x88 after SMB
-  X"00"  -- 0xAE: 0x00 : will be 0x01 after SMI
+  X"00", -- 0xAE: 0x00 : will be 0x01 after SMI
+
+  -- end program
+  c_REQ,   -- 0xAF: Q=0
+  c_DEC_3  -- 0xB0: R(N)-1          : (repeating forever)
 
 );
 
