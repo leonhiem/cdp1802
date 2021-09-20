@@ -86,6 +86,7 @@ ARCHITECTURE str OF cdp1802 IS
 
   SIGNAL wr_Q      : STD_LOGIC;
   SIGNAL Q_in      : STD_LOGIC;
+  SIGNAL Q_out     : STD_LOGIC;
 
   SIGNAL wr_IE     : STD_LOGIC;
   SIGNAL IE_in     : STD_LOGIC;
@@ -152,11 +153,13 @@ BEGIN
     Do_MRD    => Do_MRD,
     Do_MWR    => Do_MWR,
     Q_in      => Q_in,
+    Q_out     => Q_out,
     wr_Q      => wr_Q,
     float_DATA => float_DATA,
     A_sel_lohi => A_sel_lohi,
     D_out     => D_out,
     D_in      => D_in,
+    DF_out    => DF_out,
     alu_oper  => alu_oper,
     wr_D      => wr_D,
     rd_D      => rd_D,
@@ -175,8 +178,9 @@ BEGIN
     rst => rst,
     wr  => wr_Q,
     d   => Q_in,
-    q   => Q
+    q   => Q_out
   );
+  Q <= Q_out;
 
   u_IE : ENTITY work.ff
   GENERIC MAP (
