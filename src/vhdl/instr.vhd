@@ -37,7 +37,8 @@ ENTITY instr IS
     P_in       : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
     wr_P       : OUT STD_LOGIC;
     wr_R       : OUT STD_LOGIC;
-    R_in       : OUT STD_LOGIC_VECTOR(15 DOWNTO 0)
+    R_in       : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+    nEF        : IN  STD_LOGIC_VECTOR(3 DOWNTO 0)
   );
 END instr;
 
@@ -74,7 +75,7 @@ ARCHITECTURE str OF instr IS
 
 BEGIN
 
-  p_instr_comb : PROCESS(state, r, N_out, I_out, A_out, clk_cnt, D_out, D_in, Q_out, DF_out)
+  p_instr_comb : PROCESS(state, r, N_out, I_out, A_out, clk_cnt, D_out, D_in, Q_out, DF_out, nEF)
     VARIABLE v : t_reg;
   BEGIN
       v := r;
@@ -203,6 +204,66 @@ BEGIN
                       ELSIF clk_cnt = "011" THEN
                           v.wr_R := '1';
                       END IF;
+                  ELSIF N_out = "0100" THEN    -- 0x34 : B1 : IF EF1=1, M(R(P))->R(P).0 ELSE R(P)+1
+                      -- select R(P)              note: EF1=1 means nEF(0)=0
+                      v.Do_MRD := '1';
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(P) -> A
+                      ELSIF clk_cnt = "010" THEN
+                          IF nEF(0) = '0' THEN
+                              v.mask_R := "01"; -- select R(P).0
+                              v.R_in(7 DOWNTO 0) := D_in; -- connect M(R(P))
+                          ELSE
+                              v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
+                          END IF;
+                      ELSIF clk_cnt = "011" THEN
+                          v.wr_R := '1';
+                      END IF;
+                  ELSIF N_out = "0101" THEN    -- 0x35 : B2 : IF EF2=1, M(R(P))->R(P).0 ELSE R(P)+1
+                      -- select R(P)              note: EF2=1 means nEF(1)=0
+                      v.Do_MRD := '1';
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(P) -> A
+                      ELSIF clk_cnt = "010" THEN
+                          IF nEF(1) = '0' THEN
+                              v.mask_R := "01"; -- select R(P).0
+                              v.R_in(7 DOWNTO 0) := D_in; -- connect M(R(P))
+                          ELSE
+                              v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
+                          END IF;
+                      ELSIF clk_cnt = "011" THEN
+                          v.wr_R := '1';
+                      END IF;
+                  ELSIF N_out = "0110" THEN    -- 0x36 : B3 : IF EF3=1, M(R(P))->R(P).0 ELSE R(P)+1
+                      -- select R(P)              note: EF3=1 means nEF(2)=0
+                      v.Do_MRD := '1';
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(P) -> A
+                      ELSIF clk_cnt = "010" THEN
+                          IF nEF(2) = '0' THEN
+                              v.mask_R := "01"; -- select R(P).0
+                              v.R_in(7 DOWNTO 0) := D_in; -- connect M(R(P))
+                          ELSE
+                              v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
+                          END IF;
+                      ELSIF clk_cnt = "011" THEN
+                          v.wr_R := '1';
+                      END IF;
+                  ELSIF N_out = "0111" THEN    -- 0x37 : B4 : IF EF4=1, M(R(P))->R(P).0 ELSE R(P)+1
+                      -- select R(P)              note: EF4=1 means nEF(3)=0
+                      v.Do_MRD := '1';
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(P) -> A
+                      ELSIF clk_cnt = "010" THEN
+                          IF nEF(3) = '0' THEN
+                              v.mask_R := "01"; -- select R(P).0
+                              v.R_in(7 DOWNTO 0) := D_in; -- connect M(R(P))
+                          ELSE
+                              v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
+                          END IF;
+                      ELSIF clk_cnt = "011" THEN
+                          v.wr_R := '1';
+                      END IF;
                   ELSIF N_out = "1000" THEN    -- 0x38 : SKP : R(P)+1
                       -- select R(P)
                       IF clk_cnt = "000" THEN
@@ -249,6 +310,66 @@ BEGIN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "010" THEN
                           IF DF_out = '0' THEN
+                              v.mask_R := "01"; -- select R(P).0
+                              v.R_in(7 DOWNTO 0) := D_in; -- connect M(R(P))
+                          ELSE
+                              v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
+                          END IF;
+                      ELSIF clk_cnt = "011" THEN
+                          v.wr_R := '1';
+                      END IF;
+                  ELSIF N_out = "1100" THEN    -- 0x3C : BN1 : IF EF1=0, M(R(P))->R(P).0 ELSE R(P)+1
+                      -- select R(P)              note : EF1=0 means nEF(0)=1
+                      v.Do_MRD := '1';
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(P) -> A
+                      ELSIF clk_cnt = "010" THEN
+                          IF nEF(0) = '1' THEN
+                              v.mask_R := "01"; -- select R(P).0
+                              v.R_in(7 DOWNTO 0) := D_in; -- connect M(R(P))
+                          ELSE
+                              v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
+                          END IF;
+                      ELSIF clk_cnt = "011" THEN
+                          v.wr_R := '1';
+                      END IF;
+                  ELSIF N_out = "1101" THEN    -- 0x3D : BN2 : IF EF2=0, M(R(P))->R(P).0 ELSE R(P)+1
+                      -- select R(P)              note : EF2=0 means nEF(1)=1
+                      v.Do_MRD := '1';
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(P) -> A
+                      ELSIF clk_cnt = "010" THEN
+                          IF nEF(1) = '1' THEN
+                              v.mask_R := "01"; -- select R(P).0
+                              v.R_in(7 DOWNTO 0) := D_in; -- connect M(R(P))
+                          ELSE
+                              v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
+                          END IF;
+                      ELSIF clk_cnt = "011" THEN
+                          v.wr_R := '1';
+                      END IF;
+                  ELSIF N_out = "1110" THEN    -- 0x3E : BN3 : IF EF3=0, M(R(P))->R(P).0 ELSE R(P)+1
+                      -- select R(P)              note : EF3=0 means nEF(2)=1
+                      v.Do_MRD := '1';
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(P) -> A
+                      ELSIF clk_cnt = "010" THEN
+                          IF nEF(2) = '1' THEN
+                              v.mask_R := "01"; -- select R(P).0
+                              v.R_in(7 DOWNTO 0) := D_in; -- connect M(R(P))
+                          ELSE
+                              v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
+                          END IF;
+                      ELSIF clk_cnt = "011" THEN
+                          v.wr_R := '1';
+                      END IF;
+                  ELSIF N_out = "1111" THEN    -- 0x3F : BN4 : IF EF4=0, M(R(P))->R(P).0 ELSE R(P)+1
+                      -- select R(P)              note : EF4=0 means nEF(3)=1
+                      v.Do_MRD := '1';
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(P) -> A
+                      ELSIF clk_cnt = "010" THEN
+                          IF nEF(3) = '1' THEN
                               v.mask_R := "01"; -- select R(P).0
                               v.R_in(7 DOWNTO 0) := D_in; -- connect M(R(P))
                           ELSE

@@ -169,7 +169,8 @@ BEGIN
     P_in      => P_in,
     wr_P      => wr_P,
     wr_R      => wr_R,
-    R_in      => R_in
+    R_in      => R_in,
+    nEF       => nEF
   );
 
   u_Q : ENTITY work.ff

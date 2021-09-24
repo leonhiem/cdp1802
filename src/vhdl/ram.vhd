@@ -14,7 +14,7 @@ END ram;
 
 ARCHITECTURE str OF ram IS
 
-TYPE ram_type IS ARRAY (0 to 181) OF std_logic_vector(7 DOWNTO 0);
+TYPE ram_type IS ARRAY (0 to 189) OF std_logic_vector(7 DOWNTO 0);
 
 SIGNAL ram1 : ram_type:= (
 -- Testprogram
@@ -249,14 +249,25 @@ SIGNAL ram1 : ram_type:= (
   X"C1", -- 0xAD: 0x00 : will be 0x88 after SMB
   X"00", -- 0xAE: 0x00 : will be 0x01 after SMI
 
-  -- end program
+  -- testing conditional branches
   c_BQ,  -- 0xAF: IF Q=1, M(R(P))->R(P).0 ELSE R(P)+1
   X"B3", -- 0xB0:
-  c_SEQ,   -- 0xB1: Q=0
-  c_DEC_3, -- 0xB2: R(N)-1          : (repeating forever)
-  c_REQ,   -- 0xB3: Q=0
-  c_BNQ,   -- 0xB4: IF Q=0, M(R(P))->R(P).0 ELSE R(P)+1
-  X"B1"    -- 0xB5:
+  c_BNZ, -- 0xB1: IF D NOT 0, M(R(P))->R(P).0 ELSE R(P)+1 : (D was 0x01, must jump)
+  X"B6", -- 0xB2:
+  c_REQ, -- 0xB3: Q=0
+  c_BNQ, -- 0xB4: IF Q=0, M(R(P))->R(P).0 ELSE R(P)+1 : (must jump)
+  X"B1", -- 0xB5:
+
+  c_BN1, -- 0xB6: IF EF1=0, M(R(P))->R(P).0 ELSE R(P)+1 : (nEF is input as "1110", no jump)
+  X"B1", -- 0xB7:
+  c_B1,  -- 0xB8: IF EF1=1, M(R(P))->R(P).0 ELSE R(P)+1 : (nEF is input as "1110", jump)
+  X"BC", -- 0xB9:
+  c_B2,  -- 0xBA: IF EF2=1, M(R(P))->R(P).0 ELSE R(P)+1 : (should not even be here)
+  X"B1", -- 0xBB:
+
+  -- end program
+  c_SEQ,   -- 0xBC: Q=0
+  c_DEC_3  -- 0xBD: R(N)-1          : (repeating forever)
 
 );
 
