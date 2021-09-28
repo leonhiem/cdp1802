@@ -55,16 +55,12 @@ BEGIN
     nDMA_IN  => nDMA_IN
   );
 
-  u_reg_high_addr : ENTITY work.reg
-  GENERIC MAP (
-    g_width => 8
-  )
-  PORT MAP (
-    clk => tpa,
-    d_out => addr_high,
-    d_in  => addr,
-    wr    => '1'
-  );
+  p_reg_high_addr : PROCESS(tpa, addr)
+  BEGIN
+    IF rising_edge(tpa) THEN
+      addr_high <= addr;
+    END IF;
+  END PROCESS;
 
   ram_addr(7 DOWNTO 0) <= addr;
   ram_addr(15 DOWNTO 8) <= addr_high;

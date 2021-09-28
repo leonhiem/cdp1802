@@ -14,7 +14,7 @@ END ram;
 
 ARCHITECTURE str OF ram IS
 
-TYPE ram_type IS ARRAY (0 to 189) OF std_logic_vector(7 DOWNTO 0);
+TYPE ram_type IS ARRAY (0 to 257) OF std_logic_vector(7 DOWNTO 0);
 
 SIGNAL ram1 : ram_type:= (
 -- Testprogram
@@ -265,9 +265,77 @@ SIGNAL ram1 : ram_type:= (
   c_B2,  -- 0xBA: IF EF2=1, M(R(P))->R(P).0 ELSE R(P)+1 : (should not even be here)
   X"B1", -- 0xBB:
 
+  c_LSKP, -- 0xBC: R(P)+2
+  c_NOP, -- 0xBD:
+  c_NOP, -- 0xBE:
+  c_LBR, -- 0xBF: M(R(P))->R(P).1; M(R(P+1))->R(P).0 : jump to next RAM page
+  X"01", -- 0xC0: -- jump to address.hi
+  X"00", -- 0xC1: -- jump to address.lo
+  X"00", -- 0xC2:
+  X"00", -- 0xC3:
+  X"00", -- 0xC4:
+  X"00", -- 0xC5:
+  X"00", -- 0xC6:
+  X"00", -- 0xC7:
+  X"00", -- 0xC8:
+  X"00", -- 0xC9:
+  X"00", -- 0xCA:
+  X"00", -- 0xCB:
+  X"00", -- 0xCC:
+  X"00", -- 0xCD:
+  X"00", -- 0xCE:
+  X"00", -- 0xCF:
+  X"00", -- 0xD0:
+  X"00", -- 0xD1:
+  X"00", -- 0xD2:
+  X"00", -- 0xD3:
+  X"00", -- 0xD4:
+  X"00", -- 0xD5:
+  X"00", -- 0xD6:
+  X"00", -- 0xD7:
+  X"00", -- 0xD8:
+  X"00", -- 0xD9:
+  X"00", -- 0xDA:
+  X"00", -- 0xDB:
+  X"00", -- 0xDC:
+  X"00", -- 0xDD:
+  X"00", -- 0xDE:
+  X"00", -- 0xDF:
+  X"00", -- 0xE0:
+  X"00", -- 0xE1:
+  X"00", -- 0xE2:
+  X"00", -- 0xE3:
+  X"00", -- 0xE4:
+  X"00", -- 0xE5:
+  X"00", -- 0xE6:
+  X"00", -- 0xE7:
+  X"00", -- 0xE8:
+  X"00", -- 0xE9:
+  X"00", -- 0xEA:
+  X"00", -- 0xEB:
+  X"00", -- 0xEC:
+  X"00", -- 0xED:
+  X"00", -- 0xEE:
+  X"00", -- 0xEF:
+  X"00", -- 0xF0:
+  X"00", -- 0xF1:
+  X"00", -- 0xF2:
+  X"00", -- 0xF3:
+  X"00", -- 0xF4:
+  X"00", -- 0xF5:
+  X"00", -- 0xF6:
+  X"00", -- 0xF7:
+  X"00", -- 0xF8:
+  X"00", -- 0xF9:
+  X"00", -- 0xFA:
+  X"00", -- 0xFB:
+  X"00", -- 0xFC:
+  X"00", -- 0xFD:
+  X"00", -- 0xFE:
+  X"00", -- 0xFF:
   -- end program
-  c_SEQ,   -- 0xBC: Q=0
-  c_DEC_3  -- 0xBD: R(N)-1          : (repeating forever)
+  c_SEQ,   -- 0x100: Q=0
+  c_DEC_3  -- 0x101: R(N)-1          : (repeating forever)
 
 );
 

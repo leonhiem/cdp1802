@@ -81,7 +81,6 @@ ARCHITECTURE str OF cdp1802 IS
   SIGNAL R_out     : STD_LOGIC_VECTOR(15 DOWNTO 0);
 
   SIGNAL wr_A      : STD_LOGIC;
-  SIGNAL A_in      : STD_LOGIC_VECTOR(15 DOWNTO 0);
   SIGNAL A_out     : STD_LOGIC_VECTOR(15 DOWNTO 0);
 
   SIGNAL wr_Q      : STD_LOGIC;
@@ -100,6 +99,8 @@ ARCHITECTURE str OF cdp1802 IS
 
   SIGNAL state     : STD_LOGIC_VECTOR(3 DOWNTO 0);
   SIGNAL clk_cnt   : STD_LOGIC_VECTOR(2 DOWNTO 0);
+  SIGNAL forceS1   : STD_LOGIC;
+  SIGNAL extraS1   : STD_LOGIC;
 
 BEGIN
 
@@ -132,7 +133,9 @@ BEGIN
     clk_cnt_out => clk_cnt,
     Go_Idle    => Go_Idle,
     Do_MRD     => Do_MRD,
-    Do_MWR     => Do_MWR
+    Do_MWR     => Do_MWR,
+    forceS1    => forceS1,
+    extraS1    => extraS1
   );
 
   u_instr : ENTITY work.instr
@@ -154,6 +157,7 @@ BEGIN
     Do_MWR    => Do_MWR,
     Q_in      => Q_in,
     Q_out     => Q_out,
+    IE_out    => IE_out,
     wr_Q      => wr_Q,
     float_DATA => float_DATA,
     A_sel_lohi => A_sel_lohi,
@@ -170,7 +174,9 @@ BEGIN
     wr_P      => wr_P,
     wr_R      => wr_R,
     R_in      => R_in,
-    nEF       => nEF
+    nEF       => nEF,
+    forceS1   => forceS1,
+    extraS1   => extraS1
   );
 
   u_Q : ENTITY work.ff
@@ -323,19 +329,19 @@ BEGIN
     wr    => wr_R
   );
 
-  u_reg_A : ENTITY work.reg
-  GENERIC MAP (
-    g_width => 16
-  )
-  PORT MAP (
-    clk => CLOCK,
-    rst => rst,
+  p_reg_A : PROCESS(CLOCK, rst, R_out, wr_A)
+  BEGIN
+    IF falling_edge(CLOCK) THEN
+      IF rst = '1' THEN
+        A_out <= (OTHERS => '0');
+      END IF;
 
-    d_out => A_out,
-    d_in  => R_out,
+      IF wr_A = '1' THEN
+        A_out <= R_out;
+      END IF;
+    END IF;
+  END PROCESS;
 
-    wr    => wr_A
-  );
 
   u_amux_A : ENTITY work.amux
   PORT MAP (

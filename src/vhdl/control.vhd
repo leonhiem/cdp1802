@@ -31,7 +31,9 @@ ENTITY control IS
     clk_cnt_out: OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
     Go_Idle    : IN  STD_LOGIC;
     Do_MRD     : IN  STD_LOGIC;
-    Do_MWR     : IN  STD_LOGIC
+    Do_MWR     : IN  STD_LOGIC;
+    forceS1    : IN  STD_LOGIC;
+    extraS1    : OUT STD_LOGIC
   );
 END control;
 
@@ -51,6 +53,7 @@ ARCHITECTURE str OF control IS
     preset_IE  : STD_LOGIC;
     reset_DATA : STD_LOGIC;
     clk_cnt    : NATURAL RANGE 0 TO 7;
+    extraS1    : STD_LOGIC;
   END RECORD;
 
   TYPE f_reg IS RECORD
@@ -65,7 +68,7 @@ ARCHITECTURE str OF control IS
 BEGIN
 
 
-  p_control_comb : PROCESS(mode_in, r, dma_in, dma_out, interrupt, ie, Go_Idle)
+  p_control_comb : PROCESS(mode_in, r, dma_in, dma_out, interrupt, ie, Go_Idle, forceS1)
     VARIABLE v : t_reg;
     VARIABLE w : f_reg;
   BEGIN
@@ -79,7 +82,6 @@ BEGIN
       v.preset_X := '0';
       v.preset_IE := '0';
       v.reset_DATA := '0';
-
 
       IF r.mode = c_PAUSE THEN
           -- pause
@@ -115,6 +117,7 @@ BEGIN
                 v.MWR := '0';
                 v.clk_cnt := 0;
                 v.reset_DATA := '1';
+                v.extraS1 := '0';
                 v.state := c_S1_INIT;
             WHEN c_S1_INIT =>
                 v.reset_DATA := '1';
@@ -133,7 +136,11 @@ BEGIN
                         v.state := c_S3_INTERRUPT;
                     ELSIF Go_Idle = '1' THEN 
                         v.state := c_S1_IDLE;
+                    ELSIF forceS1 = '1' THEN
+                        v.extraS1 := '1';
+                        v.state := c_S1_EXEC;
                     ELSE
+                        v.extraS1 := '0';
                         v.state := c_S0_FETCH;
                     END IF;
                 END IF;
@@ -231,7 +238,10 @@ BEGIN
   state <= r.state;
   clk_cnt <= std_logic_vector(to_unsigned(r.clk_cnt, clk_cnt'length));
   clk_cnt_out <= clk_cnt;
-  addr_lohi <= '1' WHEN (clk_cnt = "000" OR clk_cnt = "001") ELSE '0';
+  addr_lohi <= '1' WHEN (clk_cnt = "000" OR clk_cnt = "001" OR clk_cnt = "010") ELSE '0';
+  --wr_A <= '1' WHEN (clk_cnt = "000" AND 
+  --                  (r.state=c_S0_FETCH OR r.state=c_S1_EXEC) AND
+  --                  r.mode=c_RUN) ELSE '0';
   rst   <= r.rst;
   tpa   <= r.tpa;
   tpb   <= f.tpb;
@@ -242,5 +252,6 @@ BEGIN
   preset_X  <= r.preset_X;
   preset_IE <= r.preset_IE;
   reset_DATA <= r.reset_DATA;
+  extraS1 <= r.extraS1;
 
 END str;
