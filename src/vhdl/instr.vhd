@@ -572,7 +572,16 @@ BEGIN
                       v.wr_R := '1';
                   END IF;
               WHEN "1100" => -- 0xCN
+
                   -- All 0xCN instructions require 2x S1 cycles
+                  IF clk_cnt = "011" THEN
+                      IF extraS1 = '0' THEN
+                          v.forceS1 := '1'; -- stay in S1_EXEC
+                      ELSE
+                          v.forceS1 := '0'; -- leave S1_EXEC
+                      END IF;
+                  END IF;
+
                   IF N_out = "0000" THEN -- 0xC0 : LBR : M(R(P))->R(P).1 ; M(R(P+1))->R(P).0
                       -- select R(P)
                       v.Do_MRD := '1';
@@ -581,10 +590,8 @@ BEGIN
                       ELSIF clk_cnt = "011" THEN
                           IF extraS1 = '0' THEN
                               v.tmp_page := D_in; -- connect M(R(P))
-                              v.forceS1 := '1'; -- stay in S1_EXEC
                               v.R_in := std_logic_vector(unsigned(A_out) + 1);
                           ELSE
-                              v.forceS1 := '0'; -- leave S1_EXEC
                               v.R_in := r.tmp_page & D_in; -- connect M(R(P))
                           END IF;
                       ELSIF clk_cnt = "100" THEN
@@ -600,17 +607,12 @@ BEGIN
                           IF Q_out = '1' THEN
                               IF extraS1 = '0' THEN
                                   v.tmp_page := D_in; -- connect M(R(P))
-                                  v.forceS1 := '1'; -- stay in S1_EXEC
                                   v.R_in := std_logic_vector(unsigned(A_out) + 1);
                               ELSE
-                                  v.forceS1 := '0'; -- leave S1_EXEC
                                   v.R_in := r.tmp_page & D_in; -- connect M(R(P))
                               END IF;
                           ELSE
-                              IF extraS1 = '0' THEN
-                                  v.forceS1 := '1'; -- stay in S1_EXEC
-                              ELSE
-                                  v.forceS1 := '0'; -- leave S1_EXEC
+                              IF extraS1 = '1' THEN
                                   v.R_in := std_logic_vector(unsigned(A_out) + 2); -- A+=2
                               END IF;
                           END IF;
@@ -627,17 +629,12 @@ BEGIN
                           IF D_out = "00000000" THEN
                               IF extraS1 = '0' THEN
                                   v.tmp_page := D_in; -- connect M(R(P))
-                                  v.forceS1 := '1'; -- stay in S1_EXEC
                                   v.R_in := std_logic_vector(unsigned(A_out) + 1);
                               ELSE
-                                  v.forceS1 := '0'; -- leave S1_EXEC
                                   v.R_in := r.tmp_page & D_in; -- connect M(R(P))
                               END IF;
                           ELSE
-                              IF extraS1 = '0' THEN
-                                  v.forceS1 := '1'; -- stay in S1_EXEC
-                              ELSE
-                                  v.forceS1 := '0'; -- leave S1_EXEC
+                              IF extraS1 = '1' THEN
                                   v.R_in := std_logic_vector(unsigned(A_out) + 2); -- A+=2
                               END IF;
                           END IF;
@@ -654,17 +651,12 @@ BEGIN
                           IF DF_out = '1' THEN
                               IF extraS1 = '0' THEN
                                   v.tmp_page := D_in; -- connect M(R(P))
-                                  v.forceS1 := '1'; -- stay in S1_EXEC
                                   v.R_in := std_logic_vector(unsigned(A_out) + 1);
                               ELSE
-                                  v.forceS1 := '0'; -- leave S1_EXEC
                                   v.R_in := r.tmp_page & D_in; -- connect M(R(P))
                               END IF;
                           ELSE
-                              IF extraS1 = '0' THEN
-                                  v.forceS1 := '1'; -- stay in S1_EXEC
-                              ELSE
-                                  v.forceS1 := '0'; -- leave S1_EXEC
+                              IF extraS1 = '1' THEN
                                   v.R_in := std_logic_vector(unsigned(A_out) + 2); -- A+=2
                               END IF;
                           END IF;
@@ -673,22 +665,12 @@ BEGIN
                       END IF;
                   ELSIF N_out = "0100" THEN -- 0xC4 : NOP
                       -- NOP
-                      IF clk_cnt = "011" THEN
-                          IF extraS1 = '0' THEN
-                              v.forceS1 := '1'; -- stay in S1_EXEC
-                          ELSE
-                              v.forceS1 := '0'; -- leave S1_EXEC
-                          END IF;
-                      END IF;
                   ELSIF N_out = "0101" THEN    -- 0xC5 : LSNQ : IF Q=0, R(P)+2 ELSE CONTINUE
                       -- select R(P)
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "011" THEN
-                          IF extraS1 = '0' THEN
-                              v.forceS1 := '1'; -- stay in S1_EXEC
-                          ELSE
-                              v.forceS1 := '0'; -- leave S1_EXEC
+                          IF extraS1 = '1' THEN
                               IF Q_out = '0' THEN
                                   v.R_in := std_logic_vector(unsigned(A_out) + 2); -- A+=2
                               END IF;
@@ -701,10 +683,7 @@ BEGIN
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "011" THEN
-                          IF extraS1 = '0' THEN
-                              v.forceS1 := '1'; -- stay in S1_EXEC
-                          ELSE
-                              v.forceS1 := '0'; -- leave S1_EXEC
+                          IF extraS1 = '1' THEN
                               IF D_out /= "00000000" THEN
                                   v.R_in := std_logic_vector(unsigned(A_out) + 2); -- A+=2
                               END IF;
@@ -717,10 +696,7 @@ BEGIN
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "011" THEN
-                          IF extraS1 = '0' THEN
-                              v.forceS1 := '1'; -- stay in S1_EXEC
-                          ELSE
-                              v.forceS1 := '0'; -- leave S1_EXEC
+                          IF extraS1 = '1' THEN
                               IF DF_out = '0' THEN
                                   v.R_in := std_logic_vector(unsigned(A_out) + 2); -- A+=2
                               END IF;
@@ -733,10 +709,7 @@ BEGIN
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "011" THEN
-                          IF extraS1 = '0' THEN
-                              v.forceS1 := '1'; -- stay in S1_EXEC
-                          ELSE
-                              v.forceS1 := '0'; -- leave S1_EXEC
+                          IF extraS1 = '1' THEN
                               v.R_in := std_logic_vector(unsigned(A_out) + 2); -- A+=2
                           END IF;
                       ELSIF clk_cnt = "100" THEN
@@ -752,17 +725,12 @@ BEGIN
                           IF Q_out = '0' THEN
                               IF extraS1 = '0' THEN
                                   v.tmp_page := D_in; -- connect M(R(P))
-                                  v.forceS1 := '1'; -- stay in S1_EXEC
                                   v.R_in := std_logic_vector(unsigned(A_out) + 1);
                               ELSE
-                                  v.forceS1 := '0'; -- leave S1_EXEC
                                   v.R_in := r.tmp_page & D_in; -- connect M(R(P))
                               END IF;
                           ELSE
-                              IF extraS1 = '0' THEN
-                                  v.forceS1 := '1'; -- stay in S1_EXEC
-                              ELSE
-                                  v.forceS1 := '0'; -- leave S1_EXEC
+                              IF extraS1 = '1' THEN
                                   v.R_in := std_logic_vector(unsigned(A_out) + 2); -- A+=2
                               END IF;
                           END IF;
@@ -779,17 +747,12 @@ BEGIN
                           IF D_out /= "00000000" THEN
                               IF extraS1 = '0' THEN
                                   v.tmp_page := D_in; -- connect M(R(P))
-                                  v.forceS1 := '1'; -- stay in S1_EXEC
                                   v.R_in := std_logic_vector(unsigned(A_out) + 1);
                               ELSE
-                                  v.forceS1 := '0'; -- leave S1_EXEC
                                   v.R_in := r.tmp_page & D_in; -- connect M(R(P))
                               END IF;
                           ELSE
-                              IF extraS1 = '0' THEN
-                                  v.forceS1 := '1'; -- stay in S1_EXEC
-                              ELSE
-                                  v.forceS1 := '0'; -- leave S1_EXEC
+                              IF extraS1 = '1' THEN
                                   v.R_in := std_logic_vector(unsigned(A_out) + 2); -- A+=2
                               END IF;
                           END IF;
@@ -806,17 +769,12 @@ BEGIN
                           IF DF_out = '0' THEN
                               IF extraS1 = '0' THEN
                                   v.tmp_page := D_in; -- connect M(R(P))
-                                  v.forceS1 := '1'; -- stay in S1_EXEC
                                   v.R_in := std_logic_vector(unsigned(A_out) + 1);
                               ELSE
-                                  v.forceS1 := '0'; -- leave S1_EXEC
                                   v.R_in := r.tmp_page & D_in; -- connect M(R(P))
                               END IF;
                           ELSE
-                              IF extraS1 = '0' THEN
-                                  v.forceS1 := '1'; -- stay in S1_EXEC
-                              ELSE
-                                  v.forceS1 := '0'; -- leave S1_EXEC
+                              IF extraS1 = '1' THEN
                                   v.R_in := std_logic_vector(unsigned(A_out) + 2); -- A+=2
                               END IF;
                           END IF;
@@ -828,10 +786,7 @@ BEGIN
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "011" THEN
-                          IF extraS1 = '0' THEN
-                              v.forceS1 := '1'; -- stay in S1_EXEC
-                          ELSE
-                              v.forceS1 := '0'; -- leave S1_EXEC
+                          IF extraS1 = '1' THEN
                               IF IE_out = '1' THEN
                                   v.R_in := std_logic_vector(unsigned(A_out) + 2); -- A+=2
                               END IF;
@@ -844,10 +799,7 @@ BEGIN
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "011" THEN
-                          IF extraS1 = '0' THEN
-                              v.forceS1 := '1'; -- stay in S1_EXEC
-                          ELSE
-                              v.forceS1 := '0'; -- leave S1_EXEC
+                          IF extraS1 = '1' THEN
                               IF Q_out = '1' THEN
                                   v.R_in := std_logic_vector(unsigned(A_out) + 2); -- A+=2
                               END IF;
@@ -860,10 +812,7 @@ BEGIN
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "011" THEN
-                          IF extraS1 = '0' THEN
-                              v.forceS1 := '1'; -- stay in S1_EXEC
-                          ELSE
-                              v.forceS1 := '0'; -- leave S1_EXEC
+                          IF extraS1 = '1' THEN
                               IF D_out = "00000000" THEN
                                   v.R_in := std_logic_vector(unsigned(A_out) + 2); -- A+=2
                               END IF;
@@ -876,10 +825,7 @@ BEGIN
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "011" THEN
-                          IF extraS1 = '0' THEN
-                              v.forceS1 := '1'; -- stay in S1_EXEC
-                          ELSE
-                              v.forceS1 := '0'; -- leave S1_EXEC
+                          IF extraS1 = '1' THEN
                               IF DF_out = '1' THEN
                                   v.R_in := std_logic_vector(unsigned(A_out) + 2); -- A+=2
                               END IF;

@@ -14,7 +14,7 @@ END ram;
 
 ARCHITECTURE str OF ram IS
 
-TYPE ram_type IS ARRAY (0 to 257) OF std_logic_vector(7 DOWNTO 0);
+TYPE ram_type IS ARRAY (0 to 267) OF std_logic_vector(7 DOWNTO 0);
 
 SIGNAL ram1 : ram_type:= (
 -- Testprogram
@@ -271,18 +271,23 @@ SIGNAL ram1 : ram_type:= (
   c_LBR, -- 0xBF: M(R(P))->R(P).1; M(R(P+1))->R(P).0 : jump to next RAM page
   X"01", -- 0xC0: -- jump to address.hi
   X"00", -- 0xC1: -- jump to address.lo
-  X"00", -- 0xC2:
+
+  -- come back from next page (I):
+  c_LSNQ, -- 0xC2: -- long skip if Q=0 (must long skip)
   X"00", -- 0xC3:
   X"00", -- 0xC4:
-  X"00", -- 0xC5:
-  X"00", -- 0xC6:
-  X"00", -- 0xC7:
-  X"00", -- 0xC8:
+  c_LBNQ, -- 0xC5: -- long branch if Q=0 (must jump to next page)
+  X"01", -- 0xC6:
+  X"05", -- 0xC7:
+
+  -- come back from next page (II):
+  c_LSDF, -- 0xC8: long skip if DF=1 (DF was still 1 , so must long skip)
   X"00", -- 0xC9:
   X"00", -- 0xCA:
-  X"00", -- 0xCB:
-  X"00", -- 0xCC:
-  X"00", -- 0xCD:
+  c_LBDF, -- 0xCB: long branch if DF=1 (DF was still 1, so must long branch to next page)
+  X"01", -- 0xCC:
+  X"0A", -- 0xCD:
+
   X"00", -- 0xCE:
   X"00", -- 0xCF:
   X"00", -- 0xD0:
@@ -333,9 +338,22 @@ SIGNAL ram1 : ram_type:= (
   X"00", -- 0xFD:
   X"00", -- 0xFE:
   X"00", -- 0xFF:
+
+  -- next page:
+  c_LDI, -- 0x100: load D
+  X"12", -- 0x101:
+  c_LBNZ, -- 0x102: if D!=0 jump
+  X"00",  -- 0x103:
+  X"C2",  -- 0x104:
+
+  c_LDI, -- 0x105: load D
+  X"00", -- 0x106:
+  c_LBZ, -- 0x107: long branch if D=0 (must long jump!)
+  X"00", -- 0x108: pack to page 0
+  X"C8", -- 0x109:
   -- end program
-  c_SEQ,   -- 0x100: Q=0
-  c_DEC_3  -- 0x101: R(N)-1          : (repeating forever)
+  c_SEQ,   -- 0x10A: Q=0
+  c_DEC_3  -- 0x10B: R(N)-1          : (repeating forever)
 
 );
 
