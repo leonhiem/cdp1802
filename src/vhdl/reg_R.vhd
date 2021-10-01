@@ -1,3 +1,18 @@
+-------------------------------------------------------------------------------
+--
+-- File Name: reg_R.vhd
+-- Author: Leon Hiemstra
+--
+-- Title: CDP1802 General purpose registerbank
+--
+-- License: MIT
+--
+-- Description: 
+--
+--
+--
+-------------------------------------------------------------------------------
+
 LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;

@@ -1,3 +1,18 @@
+-------------------------------------------------------------------------------
+--
+-- File Name: tb_cdp1802.vhd
+-- Author: Leon Hiemstra
+--
+-- Title: CDP1802 testbench
+--
+-- License: MIT
+--
+-- Description: 
+--
+--
+--
+-------------------------------------------------------------------------------
+
 LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;

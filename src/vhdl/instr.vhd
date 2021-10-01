@@ -1,3 +1,19 @@
+-------------------------------------------------------------------------------
+--
+-- File Name: instr.vhd
+-- Author: Leon Hiemstra
+-- Date: Mar-Oct 2021
+--
+-- Title: CDP1802 instruction decoder
+--
+-- License: MIT
+--
+-- Description: 
+--
+--
+--
+-------------------------------------------------------------------------------
+
 LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;
@@ -10,12 +26,14 @@ ENTITY instr IS
     clk_cnt    : IN  STD_LOGIC_VECTOR(2 DOWNTO 0);
     NtoR       : OUT STD_LOGIC;
     XtoR       : OUT STD_LOGIC;
+    StoR       : OUT STD_LOGIC;
     wr_A       : OUT STD_LOGIC;
     A_out      : IN  STD_LOGIC_VECTOR(15 DOWNTO 0);
     wr_I       : OUT STD_LOGIC;
     wr_N       : OUT STD_LOGIC;
     mask_R     : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
     N_out      : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
+    P_out      : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
     I_out      : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
     Go_Idle    : OUT STD_LOGIC;
     Do_MRD     : OUT STD_LOGIC;
@@ -23,8 +41,11 @@ ENTITY instr IS
     Q_in       : OUT STD_LOGIC;
     Q_out      : IN  STD_LOGIC;
     IE_out     : IN  STD_LOGIC;
+    IE_in      : OUT STD_LOGIC;
+    wr_IE      : OUT STD_LOGIC;
     wr_Q       : OUT STD_LOGIC;
     float_DATA : OUT STD_LOGIC;
+    float_T    : OUT STD_LOGIC;
     A_sel_lohi : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
     D_out      : IN  STD_LOGIC_VECTOR(7 DOWNTO 0);
     D_in       : IN  STD_LOGIC_VECTOR(7 DOWNTO 0);
@@ -41,7 +62,9 @@ ENTITY instr IS
     R_in       : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
     nEF        : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
     forceS1    : OUT STD_LOGIC;
-    extraS1    : IN  STD_LOGIC
+    extraS1    : IN  STD_LOGIC;
+    T_out      : IN  STD_LOGIC_VECTOR(7 DOWNTO 0);
+    wr_T       : OUT STD_LOGIC
   );
 END instr;
 
@@ -51,6 +74,7 @@ ARCHITECTURE str OF instr IS
   TYPE t_reg IS RECORD
     NtoR     : STD_LOGIC;
     XtoR     : STD_LOGIC;
+    StoR     : STD_LOGIC;
     wr_A     : STD_LOGIC;
     wr_I     : STD_LOGIC;
     wr_N     : STD_LOGIC;
@@ -61,6 +85,7 @@ ARCHITECTURE str OF instr IS
     Q_in     : STD_LOGIC;
     wr_Q     : STD_LOGIC;
     float_DATA : STD_LOGIC;
+    float_T    : STD_LOGIC;
     A_sel_lohi : STD_LOGIC_VECTOR(1 DOWNTO 0);
     alu_oper   : STD_LOGIC_VECTOR(3 DOWNTO 0);
     wr_D     : STD_LOGIC;
@@ -74,18 +99,22 @@ ARCHITECTURE str OF instr IS
     forceS1  : STD_LOGIC;
     tmp_page : STD_LOGIC_VECTOR(7 DOWNTO 0);
     R_in     : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    wr_T     : STD_LOGIC;
+    wr_IE    : STD_LOGIC;
+    IE_in    : STD_LOGIC;
   END RECORD;
 
   SIGNAL r, nxt_r : t_reg;
 
 BEGIN
 
-  p_instr_comb : PROCESS(state, r, N_out, I_out, A_out, clk_cnt, D_out, D_in, Q_out, DF_out, IE_out, nEF, extraS1)
+  p_instr_comb : PROCESS(state, r, N_out, P_out, I_out, A_out, clk_cnt, D_out, D_in, Q_out, DF_out, IE_out, nEF, extraS1, T_out)
     VARIABLE v : t_reg;
   BEGIN
       v := r;
       v.XtoR := '0';
       v.NtoR := '0';
+      v.StoR := '0';
       v.wr_A := '0';
       v.wr_I := '0';
       v.wr_N := '0';
@@ -95,6 +124,7 @@ BEGIN
       v.Do_MWR  := '0';
       v.wr_Q := '0';
       v.float_DATA := '1';
+      v.float_T := '1';
       v.A_sel_lohi := "00";
       v.alu_oper   := c_ALU_NOP;
       v.wr_D := '0';
@@ -103,6 +133,8 @@ BEGIN
       v.wr_X := '0';
       v.wr_P := '0';
       v.wr_R := '0';
+      v.wr_T := '0';
+      v.wr_IE := '0';
 
       CASE state IS
         WHEN c_S0_FETCH =>
@@ -417,7 +449,39 @@ BEGIN
                       END IF;
                   END IF;
               WHEN "0111" => -- 0x7N
-                  IF N_out = "0010" THEN -- 0x72 : LDXA : M(R(X)) -> D ; R(X)+1
+                  IF N_out = "0000" THEN    -- 0x70 : RET : M(R(X))->(X,P);R(X)+1;1->IE
+                      v.XtoR := '1'; -- Select R(X)
+                      v.Do_MRD := '1';
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(X) -> A
+                      ELSIF clk_cnt = "011" THEN
+                          v.X_in := D_in(7 DOWNTO 4);
+                          v.P_in := D_in(3 DOWNTO 0);
+                          v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
+                          v.IE_in := '1';
+                      ELSIF clk_cnt = "100" THEN
+                          v.wr_R := '1';
+                          v.wr_X := '1';
+                          v.wr_P := '1';
+                          v.wr_IE := '1';
+                      END IF;
+                  ELSIF N_out = "0001" THEN    -- 0x71 : DIS : M(R(X))->(X,P);R(X)+1;0->IE
+                      v.XtoR := '1'; -- Select R(X)
+                      v.Do_MRD := '1';
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(X) -> A
+                      ELSIF clk_cnt = "011" THEN
+                          v.X_in := D_in(7 DOWNTO 4);
+                          v.P_in := D_in(3 DOWNTO 0);
+                          v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
+                          v.IE_in := '0';
+                      ELSIF clk_cnt = "100" THEN
+                          v.wr_R := '1';
+                          v.wr_X := '1';
+                          v.wr_P := '1';
+                          v.wr_IE := '1';
+                      END IF;
+                  ELSIF N_out = "0010" THEN -- 0x72 : LDXA : M(R(X)) -> D ; R(X)+1
                       v.XtoR := '1'; -- Select R(X)
                       v.Do_MRD := '1';
                       IF clk_cnt = "000" THEN
@@ -479,6 +543,28 @@ BEGIN
                       ELSIF clk_cnt = "100" THEN
                           v.wr_D := '1'; -- M(R(X)) -> D
                           v.wr_DF := '1'; -- carry -> DF
+                      END IF;
+                  ELSIF N_out = "1000" THEN    -- 0x78 : SAV : T -> M(R(X))
+                      v.XtoR := '1'; -- Select R(X)
+                      v.float_T := '0';
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(X) -> A
+                      ELSIF clk_cnt = "100" THEN
+                          v.Do_MWR := '1';
+                      END IF;
+                  ELSIF N_out = "1001" THEN    -- 0x79 : MARK : (X,P)->T:M(R(2)) THEN P->X:R(2)-1
+                      v.StoR := '1'; -- Select R(2) (Stackpointer)
+                      v.float_T := '0';
+                      v.X_in  := P_out;
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(X) -> A
+                          v.wr_T := '1';
+                      ELSIF clk_cnt = "011" THEN
+                          v.R_in := std_logic_vector(unsigned(A_out) - 1); -- A--
+                      ELSIF clk_cnt = "100" THEN
+                          v.Do_MWR := '1';
+                          v.wr_R := '1';
+                          v.wr_X := '1';
                       END IF;
                   ELSIF N_out = "1011" THEN    -- 0x7B : SEQ
                       v.Q_in  := '1';       -- Q=1
@@ -1038,6 +1124,7 @@ BEGIN
   -- connect
   XtoR <= r.XtoR;
   NtoR <= r.NtoR;
+  StoR <= r.StoR;
   wr_A <= r.wr_A;
   wr_I <= r.wr_I;
   wr_N <= r.wr_N;
@@ -1048,6 +1135,7 @@ BEGIN
   wr_Q    <= r.wr_Q;
   Q_in    <= r.Q_in;
   float_DATA <= r.float_DATA;
+  float_T <= r.float_T;
   A_sel_lohi <= r.A_sel_lohi;
   alu_oper   <= r.alu_oper;
   wr_D   <= r.wr_D;
@@ -1058,8 +1146,11 @@ BEGIN
   P_in   <= r.P_in;
   wr_P   <= r.wr_P;
   wr_R   <= r.wr_R;
+  wr_T   <= r.wr_T;
   R_in   <= r.R_in;
   forceS1 <= r.forceS1;
+  IE_in   <= r.IE_in;
+  wr_IE   <= r.wr_IE;
 
 
 END str;

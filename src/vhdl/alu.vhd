@@ -1,3 +1,18 @@
+-------------------------------------------------------------------------------
+--
+-- File Name: alu.vhd
+-- Author: Leon Hiemstra
+--
+-- Title: Implementation of the CDP1802 ALU
+--
+-- License: MIT
+--
+-- Description: 
+--
+--
+--
+-------------------------------------------------------------------------------
+
 LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;

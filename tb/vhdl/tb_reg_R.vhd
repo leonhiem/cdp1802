@@ -1,3 +1,18 @@
+-------------------------------------------------------------------------------
+--
+-- File Name: tb_reg_R.vhd
+-- Author: Leon Hiemstra
+--
+-- Title: reg_R testbench
+--
+-- License: MIT
+--
+-- Description: 
+--
+--
+--
+-------------------------------------------------------------------------------
+
 LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;

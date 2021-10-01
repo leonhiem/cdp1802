@@ -1,3 +1,18 @@
+-------------------------------------------------------------------------------
+--
+-- File Name: cdp18.vhd
+-- Author: Leon Hiemstra
+--
+-- Title: CDP18 Microprocessor System
+--
+-- License: MIT
+--
+-- Description: 
+--
+--
+--
+-------------------------------------------------------------------------------
+
 LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;

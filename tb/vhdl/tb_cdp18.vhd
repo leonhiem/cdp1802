@@ -1,3 +1,18 @@
+-------------------------------------------------------------------------------
+--
+-- File Name: tb_cdp18.vhd
+-- Author: Leon Hiemstra
+--
+-- Title: CDP18 testbench
+--
+-- License: MIT
+--
+-- Description: 
+--
+--
+--
+-------------------------------------------------------------------------------
+
 LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;
@@ -57,7 +72,37 @@ BEGIN
     nCLEAR <= '1';
     nWAIT  <= '1';
 
-    FOR I IN 0 TO 3000 LOOP
+    FOR I IN 0 TO 700 LOOP
+      WAIT UNTIL rising_edge(clk);
+    END LOOP;
+
+    nINT <= '0';
+    FOR I IN 0 TO 10 LOOP
+      WAIT UNTIL rising_edge(clk);
+    END LOOP;
+    nINT <= '1';
+
+    FOR I IN 0 TO 1000 LOOP
+      WAIT UNTIL rising_edge(clk);
+    END LOOP;
+
+    nINT <= '0';
+    FOR I IN 0 TO 10 LOOP
+      WAIT UNTIL rising_edge(clk);
+    END LOOP;
+    nINT <= '1';
+
+    FOR I IN 0 TO 100 LOOP
+      WAIT UNTIL rising_edge(clk);
+    END LOOP;
+
+    nINT <= '0';
+    FOR I IN 0 TO 10 LOOP
+      WAIT UNTIL rising_edge(clk);
+    END LOOP;
+    nINT <= '1';
+
+    FOR I IN 0 TO 1000 LOOP
       WAIT UNTIL rising_edge(clk);
     END LOOP;
 

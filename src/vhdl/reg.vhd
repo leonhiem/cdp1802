@@ -1,3 +1,18 @@
+-------------------------------------------------------------------------------
+--
+-- File Name: reg.vhd
+-- Author: Leon Hiemstra
+--
+-- Title: Register implementation 
+--
+-- License: MIT
+--
+-- Description: 
+--
+--
+--
+-------------------------------------------------------------------------------
+
 LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;

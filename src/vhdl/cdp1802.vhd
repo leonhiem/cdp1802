@@ -1,3 +1,18 @@
+-------------------------------------------------------------------------------
+--
+-- File Name: cdp1802.vhd
+-- Author: Leon Hiemstra
+--
+-- Title: Top Level of CDP1802 Microprocessor
+--
+-- License: MIT
+--
+-- Description: 
+--
+--
+--
+-------------------------------------------------------------------------------
+
 LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;
@@ -33,11 +48,14 @@ ARCHITECTURE str OF cdp1802 IS
   SIGNAL A_sel_lohi : STD_LOGIC_VECTOR(1 DOWNTO 0);
 
   SIGNAL float_DATA : STD_LOGIC;
+  SIGNAL float_T    : STD_LOGIC;
   SIGNAL reset_DATA : STD_LOGIC;
 
   SIGNAL preset_IE : STD_LOGIC;
   SIGNAL IE_out    : STD_LOGIC;
 
+  SIGNAL wr_T0     : STD_LOGIC;
+  SIGNAL wr_T1     : STD_LOGIC;
   SIGNAL wr_T      : STD_LOGIC;
   SIGNAL T_in      : STD_LOGIC_VECTOR(7 DOWNTO 0);
   SIGNAL T_out     : STD_LOGIC_VECTOR(7 DOWNTO 0);
@@ -54,6 +72,7 @@ ARCHITECTURE str OF cdp1802 IS
   SIGNAL X_in      : STD_LOGIC_VECTOR(3 DOWNTO 0);
   SIGNAL X_out     : STD_LOGIC_VECTOR(3 DOWNTO 0);
 
+  SIGNAL StoR      : STD_LOGIC;
   SIGNAL NtoR      : STD_LOGIC;
   SIGNAL wr_N      : STD_LOGIC;
   SIGNAL N_in      : STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -124,7 +143,7 @@ BEGIN
     nMWR      => nMWR,
     addr_lohi => addr_lohi,
     ie        => IE_out,
-    wr_T      => wr_T,
+    wr_T      => wr_T0,
     preset_P  => preset_P,
     preset_X  => preset_X,
     preset_IE => preset_IE,
@@ -145,12 +164,14 @@ BEGIN
     clk_cnt   => clk_cnt,
     NtoR      => NtoR,
     XtoR      => XtoR,
+    StoR      => StoR,
     wr_A      => wr_A,
     A_out     => A_out,
     wr_I      => wr_I,
     wr_N      => wr_N,
     mask_R    => mask_R,
     N_out     => N_out,
+    P_out     => P_out,
     I_out     => I_out,
     Go_Idle   => Go_Idle,
     Do_MRD    => Do_MRD,
@@ -158,8 +179,11 @@ BEGIN
     Q_in      => Q_in,
     Q_out     => Q_out,
     IE_out    => IE_out,
+    IE_in     => IE_in,
+    wr_IE     => wr_IE,
     wr_Q      => wr_Q,
     float_DATA => float_DATA,
+    float_T    => float_T,
     A_sel_lohi => A_sel_lohi,
     D_out     => D_out,
     D_in      => D_in,
@@ -176,7 +200,9 @@ BEGIN
     R_in      => R_in,
     nEF       => nEF,
     forceS1   => forceS1,
-    extraS1   => extraS1
+    extraS1   => extraS1,
+    T_out     => T_out,
+    wr_T      => wr_T1
   );
 
   u_Q : ENTITY work.ff
@@ -206,7 +232,9 @@ BEGIN
 
   T_in(3 DOWNTO 0) <= P_out;
   T_in(7 DOWNTO 4) <= X_out;
-  addr_R <= X_out WHEN XtoR = '1' ELSE N_out WHEN NtoR = '1' ELSE P_out;
+  addr_R <= X_out WHEN XtoR = '1' ELSE N_out WHEN NtoR = '1' ELSE "0010" WHEN StoR = '1' ELSE P_out;
+
+  wr_T <= '1' WHEN (wr_T0 = '1' OR wr_T1 = '1') ELSE '0';
 
   u_reg_T : ENTITY work.reg
   GENERIC MAP (
@@ -354,9 +382,11 @@ BEGIN
 
   u_dmux_D : ENTITY work.dmux
   PORT MAP (
-    float   => float_DATA,
+    float0  => float_DATA,
+    float1  => float_T,
     rst     => reset_DATA,
-    d_src   => D_out, 
+    d_src0  => D_out, 
+    d_src1  => T_out, 
     d_snk   => D_in,
     data    => DATA
   );

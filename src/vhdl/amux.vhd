@@ -1,3 +1,18 @@
+-------------------------------------------------------------------------------
+--
+-- File Name: amux.vhd
+-- Author: Leon Hiemstra
+--
+-- Title: Address multiplexer
+--
+-- License: MIT
+--
+-- Description: 
+--
+--
+--
+-------------------------------------------------------------------------------
+
 LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;
