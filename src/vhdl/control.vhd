@@ -147,13 +147,13 @@ BEGIN
                 IF r.clk_cnt = 7 THEN
                     IF dma_in = '1' OR dma_out = '1' THEN
                         v.state := c_S2_DMA;
-                    ELSIF interrupt = '1' THEN 
-                        v.state := c_S3_INTERRUPT;
-                    ELSIF Go_Idle = '1' THEN 
-                        v.state := c_S1_IDLE;
                     ELSIF forceS1 = '1' THEN
                         v.extraS1 := '1';
                         v.state := c_S1_EXEC;
+                    ELSIF (interrupt = '1' AND r.extraS1 = '0') THEN 
+                        v.state := c_S3_INTERRUPT;
+                    ELSIF (Go_Idle = '1' AND r.extraS1 = '0') THEN 
+                        v.state := c_S1_IDLE;
                     ELSE
                         v.extraS1 := '0';
                         v.state := c_S0_FETCH;

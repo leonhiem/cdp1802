@@ -215,6 +215,7 @@ BEGIN
                   ELSIF N_out = "0010" THEN    -- 0x32 : BZ : IF D=0, M(R(P))->R(P).0 ELSE R(P)+1
                       -- select R(P)
                       v.Do_MRD := '1';
+                      v.rd_D := '1';
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "011" THEN
@@ -329,6 +330,7 @@ BEGIN
                   ELSIF N_out = "1010" THEN    -- 0x3A : BNZ : IF D NOT 0, M(R(P))->R(P).0 ELSE R(P)+1
                       -- select R(P)
                       v.Do_MRD := '1';
+                      v.rd_D := '1';
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "011" THEN
@@ -709,6 +711,7 @@ BEGIN
                                             --              ELSE R(P)+2
                       -- select R(P)
                       v.Do_MRD := '1';
+                      v.rd_D := '1';
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "011" THEN
@@ -766,6 +769,7 @@ BEGIN
                       END IF;
                   ELSIF N_out = "0110" THEN    -- 0xC6 : LSNZ : IF D!=0, R(P)+2 ELSE CONTINUE
                       -- select R(P)
+                      v.rd_D := '1';
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "011" THEN
@@ -827,6 +831,7 @@ BEGIN
                                             --               ELSE R(P)+2
                       -- select R(P)
                       v.Do_MRD := '1';
+                      v.rd_D := '1';
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "011" THEN
@@ -895,6 +900,7 @@ BEGIN
                       END IF;
                   ELSIF N_out = "1110" THEN    -- 0xCE : LSZ : IF D=0, R(P)+2 ELSE CONTINUE
                       -- select R(P)
+                      v.rd_D := '1';
                       IF clk_cnt = "000" THEN
                           v.wr_A := '1'; -- R(P) -> A
                       ELSIF clk_cnt = "011" THEN
@@ -1151,6 +1157,5 @@ BEGIN
   forceS1 <= r.forceS1;
   IE_in   <= r.IE_in;
   wr_IE   <= r.wr_IE;
-
 
 END str;

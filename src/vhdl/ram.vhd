@@ -306,25 +306,25 @@ SIGNAL ram1 : ram_type:= (
   X"0A", -- 0xCF:
 
   -- come back from this page after setting stackpointer:
+  -- set ISR entry point
   c_PHI_1, -- 0xD0: R(1).1=0x00 (D was still 0)
   c_LDI, -- 0xD1:
   X"E2", -- 0xD2:
   c_PLO_1, -- 0xD3: R(1).0 written, pointing to the ISR
 
+  c_SEX_3, -- 0xD4: enable IE
+  c_RET,   -- 0xD5: enable IE
+  X"23",   -- 0xD6: stack-R2 program-R3
+  c_REQ,   -- 0xD7: Q=0
 
-  X"00", -- 0xD4: -- wait for interrupt here
+  X"00", -- 0xD8: -- wait for interrupt here
 
 
   -- coming back from ISR
-  c_LBR, -- 0xD5: -- jump to next page
-  X"01", -- 0xD6:
-  X"0E", -- 0xD7:
+  c_LBR, -- 0xD9: -- jump to next page
+  X"01", -- 0xDA:
+  X"0E", -- 0xDB:
 
-
-  X"00", -- 0xD8:
-  X"00", -- 0xD9:
-  X"00", -- 0xDA:
-  X"00", -- 0xDB:
   X"00", -- 0xDC:
   X"00", -- 0xDD:
   X"00", -- 0xDE:
@@ -381,14 +381,14 @@ SIGNAL ram1 : ram_type:= (
   c_LBZ, -- 0x107: long branch if D=0 (must long jump!)
   X"00", -- 0x108: back to page 0
   X"CA", -- 0x109:
-  c_SEQ, -- 0x10A: Q=0
+  c_SEQ, -- 0x10A: Q=1
   c_LBQ, -- 0x10B: long branch if Q=1 (must long jump!)
   X"00", -- 0x10C
   X"F2", -- 0x10D
 
 
   -- end program
-  c_SEQ, -- 0x10E: Q=0
+  c_REQ, -- 0x10E: Q=0
   c_DEC_3  -- 0x10F: R(N)-1          : (repeating forever)
 
 );

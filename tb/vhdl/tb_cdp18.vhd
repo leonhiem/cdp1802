@@ -77,7 +77,7 @@ BEGIN
     END LOOP;
 
     nINT <= '0';
-    FOR I IN 0 TO 10 LOOP
+    FOR I IN 0 TO 20 LOOP
       WAIT UNTIL rising_edge(clk);
     END LOOP;
     nINT <= '1';
@@ -87,17 +87,17 @@ BEGIN
     END LOOP;
 
     nINT <= '0';
-    FOR I IN 0 TO 10 LOOP
+    FOR I IN 0 TO 20 LOOP
       WAIT UNTIL rising_edge(clk);
     END LOOP;
     nINT <= '1';
 
-    FOR I IN 0 TO 100 LOOP
+    FOR I IN 0 TO 800 LOOP
       WAIT UNTIL rising_edge(clk);
     END LOOP;
 
     nINT <= '0';
-    FOR I IN 0 TO 10 LOOP
+    FOR I IN 0 TO 20 LOOP
       WAIT UNTIL rising_edge(clk);
     END LOOP;
     nINT <= '1';
