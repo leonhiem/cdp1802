@@ -74,6 +74,7 @@ ARCHITECTURE str OF cdp1802 IS
 
   SIGNAL StoR      : STD_LOGIC;
   SIGNAL NtoR      : STD_LOGIC;
+  SIGNAL DtoR      : STD_LOGIC;
   SIGNAL wr_N      : STD_LOGIC;
   SIGNAL N_in      : STD_LOGIC_VECTOR(3 DOWNTO 0);
   SIGNAL N_out     : STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -165,6 +166,7 @@ BEGIN
     NtoR      => NtoR,
     XtoR      => XtoR,
     StoR      => StoR,
+    DtoR      => DtoR,
     wr_A      => wr_A,
     A_out     => A_out,
     wr_I      => wr_I,
@@ -202,7 +204,10 @@ BEGIN
     forceS1   => forceS1,
     extraS1   => extraS1,
     T_out     => T_out,
-    wr_T      => wr_T1
+    wr_T      => wr_T1,
+    N_addr_out => N,
+    dma_in    => DMA_IN,
+    dma_out   => DMA_OUT
   );
 
   u_Q : ENTITY work.ff
@@ -232,7 +237,7 @@ BEGIN
 
   T_in(3 DOWNTO 0) <= P_out;
   T_in(7 DOWNTO 4) <= X_out;
-  addr_R <= X_out WHEN XtoR = '1' ELSE N_out WHEN NtoR = '1' ELSE "0010" WHEN StoR = '1' ELSE P_out;
+  addr_R <= X_out WHEN XtoR = '1' ELSE N_out WHEN NtoR = '1' ELSE "0010" WHEN StoR = '1' ELSE "0000" WHEN DtoR = '1' ELSE P_out;
 
   wr_T <= '1' WHEN (wr_T0 = '1' OR wr_T1 = '1') ELSE '0';
 
@@ -298,7 +303,6 @@ BEGIN
 
     wr    => wr_N
   );
-  N <= N_out(2 DOWNTO 0);
   N_in <= D_in(3 DOWNTO 0);
 
 

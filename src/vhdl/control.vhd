@@ -69,6 +69,7 @@ ARCHITECTURE str OF control IS
     reset_DATA : STD_LOGIC;
     clk_cnt    : NATURAL RANGE 0 TO 7;
     extraS1    : STD_LOGIC;
+    int_pending : STD_LOGIC;
   END RECORD;
 
   TYPE f_reg IS RECORD
@@ -102,12 +103,16 @@ BEGIN
           -- pause
       ELSE
 
+          IF interrupt = '1' THEN
+              v.int_pending := '1';
+          END IF;
+
           IF r.clk_cnt = 7 THEN
               v.clk_cnt := 0;
+              v.int_pending := '0';
           ELSE
               v.clk_cnt := r.clk_cnt + 1;
           END IF;
-
 
           IF r.clk_cnt = 0 THEN
               v.tpa := '1';
@@ -133,6 +138,7 @@ BEGIN
                 v.clk_cnt := 0;
                 v.reset_DATA := '1';
                 v.extraS1 := '0';
+                v.int_pending := '0';
                 v.state := c_S1_INIT;
             WHEN c_S1_INIT =>
                 v.reset_DATA := '1';

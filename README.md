@@ -38,7 +38,7 @@ double click testbence `tb_cdp18.vhd`
 
 `as 10`
 
-`run 850us`
+`run 1300us`
 
 exit:
 `quit -sim`

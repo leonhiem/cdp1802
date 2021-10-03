@@ -27,6 +27,7 @@ ENTITY instr IS
     NtoR       : OUT STD_LOGIC;
     XtoR       : OUT STD_LOGIC;
     StoR       : OUT STD_LOGIC;
+    DtoR       : OUT STD_LOGIC;
     wr_A       : OUT STD_LOGIC;
     A_out      : IN  STD_LOGIC_VECTOR(15 DOWNTO 0);
     wr_I       : OUT STD_LOGIC;
@@ -64,7 +65,10 @@ ENTITY instr IS
     forceS1    : OUT STD_LOGIC;
     extraS1    : IN  STD_LOGIC;
     T_out      : IN  STD_LOGIC_VECTOR(7 DOWNTO 0);
-    wr_T       : OUT STD_LOGIC
+    wr_T       : OUT STD_LOGIC;
+    N_addr_out : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
+    dma_in     : IN  STD_LOGIC;
+    dma_out    : IN  STD_LOGIC
   );
 END instr;
 
@@ -75,6 +79,7 @@ ARCHITECTURE str OF instr IS
     NtoR     : STD_LOGIC;
     XtoR     : STD_LOGIC;
     StoR     : STD_LOGIC;
+    DtoR     : STD_LOGIC;
     wr_A     : STD_LOGIC;
     wr_I     : STD_LOGIC;
     wr_N     : STD_LOGIC;
@@ -102,19 +107,21 @@ ARCHITECTURE str OF instr IS
     wr_T     : STD_LOGIC;
     wr_IE    : STD_LOGIC;
     IE_in    : STD_LOGIC;
+    N_addr_out : STD_LOGIC_VECTOR(2 DOWNTO 0);
   END RECORD;
 
   SIGNAL r, nxt_r : t_reg;
 
 BEGIN
 
-  p_instr_comb : PROCESS(state, r, N_out, P_out, I_out, A_out, clk_cnt, D_out, D_in, Q_out, DF_out, IE_out, nEF, extraS1, T_out)
+  p_instr_comb : PROCESS(state, r, N_out, P_out, I_out, A_out, clk_cnt, D_out, D_in, Q_out, DF_out, IE_out, nEF, extraS1, T_out, dma_in, dma_out)
     VARIABLE v : t_reg;
   BEGIN
       v := r;
       v.XtoR := '0';
       v.NtoR := '0';
       v.StoR := '0';
+      v.DtoR := '0';
       v.wr_A := '0';
       v.wr_I := '0';
       v.wr_N := '0';
@@ -135,6 +142,7 @@ BEGIN
       v.wr_R := '0';
       v.wr_T := '0';
       v.wr_IE := '0';
+      v.N_addr_out := "000";
 
       CASE state IS
         WHEN c_S0_FETCH =>
@@ -448,6 +456,27 @@ BEGIN
                           v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
                       ELSIF clk_cnt = "100" THEN
                           v.wr_R := '1';
+                      END IF;
+                  ELSIF N_out(3) = '0' THEN -- 0x6N (N=1-7) : OUT
+                      v.XtoR := '1'; -- Select R(X)
+                      v.Do_MRD := '1';
+                      v.N_addr_out := N_out(2 DOWNTO 0);
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(X) -> A
+                      ELSIF clk_cnt = "011" THEN
+                          v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
+                      ELSIF clk_cnt = "100" THEN
+                          v.wr_R := '1';
+                      END IF;
+                  ELSIF N_out(3) = '1' THEN -- 0x6N (N=9-F) : INP
+                      v.XtoR := '1'; -- Select R(X)
+                      v.N_addr_out := N_out(2 DOWNTO 0);
+                      IF clk_cnt = "000" THEN
+                          v.wr_A := '1'; -- R(X) -> A
+                      ELSIF clk_cnt = "011" THEN
+                          v.Do_MWR := '1';
+                      ELSIF clk_cnt = "100" THEN
+                          v.wr_D := '1'; -- BUS -> D
                       END IF;
                   END IF;
               WHEN "0111" => -- 0x7N
@@ -1112,6 +1141,26 @@ BEGIN
             END CASE;
         WHEN c_S1_IDLE =>
         WHEN c_S2_DMA =>
+            v.DtoR := '1'; -- Select R(0)
+            IF dma_in = '1' THEN
+                IF clk_cnt = "000" THEN
+                    v.wr_A := '1'; -- R(X) -> A
+                ELSIF clk_cnt = "011" THEN
+                    v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
+                    v.Do_MWR := '1';
+                ELSIF clk_cnt = "100" THEN
+                    v.wr_R := '1';
+                END IF;
+            ELSIF dma_out = '1' THEN
+                v.Do_MRD := '1';
+                IF clk_cnt = "000" THEN
+                    v.wr_A := '1'; -- R(X) -> A
+                ELSIF clk_cnt = "011" THEN
+                    v.R_in := std_logic_vector(unsigned(A_out) + 1); -- A++
+                ELSIF clk_cnt = "100" THEN
+                    v.wr_R := '1';
+                END IF;
+            END IF;
         WHEN c_S3_INTERRUPT =>
         WHEN OTHERS =>
       END CASE;
@@ -1131,6 +1180,7 @@ BEGIN
   XtoR <= r.XtoR;
   NtoR <= r.NtoR;
   StoR <= r.StoR;
+  DtoR <= r.DtoR;
   wr_A <= r.wr_A;
   wr_I <= r.wr_I;
   wr_N <= r.wr_N;
@@ -1157,5 +1207,6 @@ BEGIN
   forceS1 <= r.forceS1;
   IE_in   <= r.IE_in;
   wr_IE   <= r.wr_IE;
+  N_addr_out <= r.N_addr_out;
 
 END str;

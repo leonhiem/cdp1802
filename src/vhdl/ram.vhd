@@ -29,10 +29,13 @@ END ram;
 
 ARCHITECTURE str OF ram IS
 
-TYPE ram_type IS ARRAY (0 to 271) OF std_logic_vector(7 DOWNTO 0);
+TYPE ram_type IS ARRAY (0 to 274) OF std_logic_vector(7 DOWNTO 0);
 
 SIGNAL ram1 : ram_type:= (
--- Testprogram
+
+-- Testprogram. This program has no function, 
+-- it is only intended for testing instructions
+
 -- instr    addr mnemonic  description
   c_DIS,   -- 0x00: Disable interrupts
   X"00",   -- 0x01
@@ -386,10 +389,16 @@ SIGNAL ram1 : ram_type:= (
   X"00", -- 0x10C
   X"F2", -- 0x10D
 
+  -- test OUT, INP
+  c_OUT_5, -- 0x10E : output M(R(2)) to output address 5
+  c_NOP,  -- 0x10F
+  c_INP_D, -- 0x110 : input from input address 5 to M(R(2))
+           --         appeared on 0x0100 in ram, which is correct
+           --         because c_OUT_5 did a R(X)+1
 
   -- end program
-  c_REQ, -- 0x10E: Q=0
-  c_DEC_3  -- 0x10F: R(N)-1          : (repeating forever)
+  c_REQ, -- 0x111: Q=0
+  c_DEC_3  -- 0x112: R(N)-1          : (repeating forever)
 
 );
 

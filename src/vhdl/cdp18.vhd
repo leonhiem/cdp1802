@@ -29,7 +29,10 @@ ENTITY cdp18 IS
     nEF      : IN    STD_LOGIC_VECTOR(3 DOWNTO 0);
     nINT     : IN    STD_LOGIC;
     nDMA_OUT : IN    STD_LOGIC;
-    nDMA_IN  : IN    STD_LOGIC
+    nDMA_IN  : IN    STD_LOGIC;
+    io_output : OUT   STD_LOGIC_VECTOR(7 DOWNTO 0);
+    io_input_ptrn : IN   STD_LOGIC_VECTOR(7 DOWNTO 0);
+    dma_input_ptrn : IN   STD_LOGIC_VECTOR(7 DOWNTO 0)
   );
 END cdp18;
 
@@ -47,6 +50,9 @@ ARCHITECTURE str OF cdp18 IS
   SIGNAL n     : STD_LOGIC_VECTOR(2 DOWNTO 0);
 
   SIGNAL n_memsel   : STD_LOGIC;
+  SIGNAL n_io_out_sel : STD_LOGIC;
+  SIGNAL n_io_in_sel : STD_LOGIC;
+  SIGNAL n_dma_in_sel : STD_LOGIC;
 
 BEGIN
 
@@ -82,6 +88,7 @@ BEGIN
 
   n_memsel <= '0';
 
+
   u_ram : ENTITY work.ram
   PORT MAP (
     address => ram_addr,
@@ -90,5 +97,33 @@ BEGIN
     nCS     => n_memsel,
     nOE     => nmrd
   );
+
+  n_io_out_sel <= '0' WHEN n = "101" ELSE '1';
+  n_io_in_sel <= '0' WHEN (n = "101" AND nmrd = '1') ELSE '1';
+  n_dma_in_sel <= '0' WHEN nDMA_IN = '0' ELSE '1';
+
+  u_io_out : ENTITY work.io_out
+  PORT MAP (
+    clk => tpb,
+    data => data,
+    output => io_output,
+    nWE => nmrd,
+    nCS => n_io_out_sel
+  );
+
+  u_io_inp : ENTITY work.io_inp
+  PORT MAP (
+    data => data,
+    input => io_input_ptrn,
+    nCS => n_io_in_sel
+  );
+
+  u_dma_in : ENTITY work.io_inp
+  PORT MAP (
+    data => data,
+    input => dma_input_ptrn,
+    nCS => n_dma_in_sel
+  );
+
 
 END str;
