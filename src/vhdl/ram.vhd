@@ -29,7 +29,7 @@ END ram;
 
 ARCHITECTURE str OF ram IS
 
-TYPE ram_type IS ARRAY (0 to 274) OF std_logic_vector(7 DOWNTO 0);
+TYPE ram_type IS ARRAY (0 to 275) OF std_logic_vector(7 DOWNTO 0);
 
 SIGNAL ram1 : ram_type:= (
 
@@ -396,9 +396,10 @@ SIGNAL ram1 : ram_type:= (
            --         appeared on 0x0100 in ram, which is correct
            --         because c_OUT_5 did a R(X)+1
 
+  c_MARK,  -- 0x111
   -- end program
-  c_REQ, -- 0x111: Q=0
-  c_DEC_3  -- 0x112: R(N)-1          : (repeating forever)
+  c_SEQ, -- 0x112: Q=1
+  c_DEC_3  -- 0x113: R(N)-1          : (repeating forever)
 
 );
 
