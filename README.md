@@ -34,11 +34,11 @@ Modelsim:
 
 `mk all`
 
-double click testbence `tb_cdp18.vhd`
+double click testbence `tb_cdp18.vhd` or `tb_cs1800.vhd`
 
 `as 10`
 
-`run 1300us`
+`run 1200us`
 
 exit:
 `quit -sim`
