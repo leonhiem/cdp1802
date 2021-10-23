@@ -37,7 +37,8 @@ BEGIN
 
   -- Connection to Addressbus:
   outputA <= input(7 DOWNTO 0) WHEN selA = '0' ELSE
-             input(15 DOWNTO 8) WHEN selA = '1';
+             input(15 DOWNTO 8) WHEN selA = '1' ELSE
+				 (OTHERS => 'Z');
 
   -- Connection to Databus:
   outputD <= input(7 DOWNTO 0) WHEN selD = "01" ELSE

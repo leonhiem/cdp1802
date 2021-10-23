@@ -84,7 +84,7 @@ ARCHITECTURE str OF control IS
 BEGIN
 
 
-  p_control_comb : PROCESS(mode_in, r, dma_in, dma_out, interrupt, ie, Go_Idle, forceS1)
+  p_control_comb : PROCESS(mode_in, r, f, dma_in, dma_out, interrupt, ie, Go_Idle, forceS1)
     VARIABLE v : t_reg;
     VARIABLE w : f_reg;
   BEGIN

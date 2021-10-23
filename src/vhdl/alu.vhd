@@ -44,7 +44,8 @@ BEGIN
   p_alu : PROCESS(oper, alu_in, d_in, carry_in)
   BEGIN
 
-    d_out <= (OTHERS => 'Z');
+    --d_out <= (OTHERS => 'Z');
+	 d_out <= alu_in;
 
     CASE oper IS
       -- logic operations:
@@ -83,7 +84,7 @@ BEGIN
 
       WHEN OTHERS => -- c_ALU_NOP
         tmp <= "0" & d_in;
-        d_out <= alu_in;
+        --d_out <= alu_in;
     END CASE;
 
   END PROCESS;

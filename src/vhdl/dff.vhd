@@ -19,7 +19,7 @@ USE IEEE.numeric_std.ALL;
 
 
 
-ENTITY dff IS
+ENTITY d_ff IS
   PORT (
     clk    : IN  STD_LOGIC;
     r      : IN  STD_LOGIC := '0';
@@ -29,10 +29,10 @@ ENTITY dff IS
     q      : OUT STD_LOGIC;
     nq     : OUT STD_LOGIC
   );
-END dff;
+END d_ff;
 
 
-ARCHITECTURE str OF dff IS
+ARCHITECTURE str OF d_ff IS
 
 SIGNAL q_tmp : STD_LOGIC;
 

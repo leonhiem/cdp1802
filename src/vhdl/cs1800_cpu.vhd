@@ -25,7 +25,7 @@ ENTITY cs1800_cpu IS
 
     LC       : IN    STD_LOGIC;
     Q        : OUT   STD_LOGIC;
-  --  nINT     : IN    STD_LOGIC;
+    nINT     : IN    STD_LOGIC;
     nEF      : IN    STD_LOGIC_VECTOR(2 DOWNTO 0);
     ADDR     : OUT   STD_LOGIC_VECTOR(7 DOWNTO 0);
     DATA     : INOUT STD_LOGIC_VECTOR(7 DOWNTO 0);
@@ -58,7 +58,7 @@ ARCHITECTURE str OF cs1800_cpu IS
   SIGNAL  nDMA_IN  : STD_LOGIC;
   SIGNAL  Q_i  : STD_LOGIC;
   SIGNAL  TPA_i  : STD_LOGIC;
-  SIGNAL  nINT  : STD_LOGIC;
+  SIGNAL  nINT_i  : STD_LOGIC;
   SIGNAL  nINT_tmp  : STD_LOGIC;
   SIGNAL  nEF4_tmp  : STD_LOGIC;
   SIGNAL  nEF_i  : STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -109,21 +109,18 @@ BEGIN
 
 
 
-  p_lc_int : PROCESS(LC, int_ack, Q_i)
+  p_lc_int : PROCESS(LC, int_ack, Q_i, reset)
   BEGIN
-    IF reset = '1' OR LC = '1' THEN
+    IF reset = '1' OR LC = '1' OR int_ack = '1' THEN
       nINT_tmp <= '1';
-      nEF4_tmp <= '1';
     ELSIF falling_edge(LC) THEN
       nINT_tmp <= '0';
     END IF;
-    IF rising_edge(int_ack) THEN
-      nINT_tmp <= '1';
-      nEF4_tmp <= NOT Q_i;
-    END IF;
   END PROCESS;
 
-  nINT <= nINT_tmp;
+  nEF4_tmp <= NOT Q_i;
+
+  nINT_i <= '0' WHEN (nINT_tmp = '0' OR nINT = '0') ELSE '1';
 
   nEF_i(2 DOWNTO 0) <= nEF;
   nEF_i(3) <= nEF4_tmp;
@@ -131,24 +128,22 @@ BEGIN
 
   p_mode : PROCESS(single, halt, reset, run, TPA_i)
   BEGIN
-    IF reset = '1' THEN
+    IF run = '1' THEN
+      nWAIT <= '1';
+      nCLEAR <= '1';
+    ELSIF halt = '1' THEN
+      nWAIT <= '0';
+      nCLEAR <= '1';
+    ELSE -- reset
       nWAIT <= '1';
       nCLEAR <= '0';
-    ELSIF halt = '1' THEN
-      IF single = '1' THEN
-        nWAIT <= '1';
-        nCLEAR <= '1';
-        IF falling_edge(TPA_i) THEN
-          nWAIT <= '0';
-          nCLEAR <= '1';
-        END IF;
-      ELSE
-        nWAIT <= '0';
-        nCLEAR <= '1';
-      END IF;
-    ELSIF run = '1' THEN
-        nWAIT <= '1';
-        nCLEAR <= '1';
+--      IF single = '1' THEN
+--        nWAIT <= '1';
+--        nCLEAR <= '1';
+--        IF falling_edge(TPA_i) THEN
+--          nWAIT <= '0';
+--          nCLEAR <= '1';
+--        END IF;
     END IF;
   END PROCESS;
   
@@ -167,7 +162,7 @@ BEGIN
     TPA      => TPA_i,
     TPB      => TPB,
     nMWR     => nMWR,
-    nINT     => nINT,
+    nINT     => nINT_i,
     nDMA_OUT => nDMA_OUT,
     nDMA_IN  => nDMA_IN
   );
