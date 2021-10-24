@@ -64,9 +64,9 @@ ARCHITECTURE str OF cs1800_cpu IS
   SIGNAL  nEF_i  : STD_LOGIC_VECTOR(3 DOWNTO 0);
 
   SIGNAL int_ack : STD_LOGIC;
-  SIGNAL int_ack_tmp1 : STD_LOGIC;
-  SIGNAL int_ack_tmp2 : STD_LOGIC;
-  SIGNAL int_ack_tmp3 : STD_LOGIC;
+  SIGNAL int_ack_start : STD_LOGIC := '0';
+  SIGNAL int_ack_stop : STD_LOGIC := '0';
+  SIGNAL int_ack_counter : STD_LOGIC_vector(15 downto 0) := (OTHERS => '0');
 
 BEGIN
 
@@ -85,27 +85,32 @@ BEGIN
   TPA <= TPA_i;
 
 
-  -- FIXME, (doesnt work, need counter to extend int_ack pulse):
-  p_led_int_ack : PROCESS(CLOCK, int_ack, int_ack_tmp1, int_ack_tmp2, int_ack_tmp3, reset)
+  p_int_ack_extend : PROCESS(CLOCK, int_ack_start, int_ack_stop, reset)
   BEGIN
-    IF rising_edge(CLOCK) THEN
-      IF int_ack = '1' THEN
-        int_ack_tmp1 <= '1';
-      END IF;
-      IF int_ack_tmp1 = '1' THEN
-        int_ack_tmp2 <= '1';
-      END IF;
-      IF int_ack_tmp2 = '1' THEN
-        int_ack_tmp3 <= '1';
-      END IF;
-      IF int_ack_tmp3 = '1' OR reset = '1' THEN
-        int_ack_tmp3 <= '0';
-        int_ack_tmp2 <= '0';
-        int_ack_tmp1 <= '0';
+    IF reset = '1' OR int_ack_stop = '1' THEN
+      int_ack_counter <= (OTHERS => '0');
+    ELSIF rising_edge(CLOCK) THEN
+      IF int_ack_start = '1' THEN
+        int_ack_counter <= std_logic_vector(unsigned(int_ack_counter) + 1);
       END IF;
     END IF;
   END PROCESS;
-  led_int_ack <= int_ack OR int_ack_tmp1 OR int_ack_tmp2 OR int_ack_tmp3;
+
+  p_led_int_ack : PROCESS(CLOCK, int_ack, int_ack_counter)
+  BEGIN
+    IF rising_edge(CLOCK) THEN
+      --IF int_ack_counter(15) = '1' THEN
+      IF int_ack_counter(2) = '1' THEN
+        int_ack_stop <= '1';
+        int_ack_start <= '0';
+      ELSIF int_ack = '1' THEN
+        int_ack_start <= '1';
+        int_ack_stop <= '0';
+      END IF;
+    END IF;
+  END PROCESS;
+
+  led_int_ack <= int_ack_start;
 
 
 

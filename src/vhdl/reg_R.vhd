@@ -82,22 +82,15 @@ BEGIN
 
 
 
-  p_regR_rd : PROCESS(rd, addr, mask, r)
+  p_regR_rd : PROCESS(rd, addr, r)
       VARIABLE addr_natural : NATURAL RANGE 0 TO 15;
   BEGIN
       addr_natural := to_integer(unsigned(addr));
-		d_out <= (OTHERS => 'Z');
       IF rd = '1' THEN
-          IF mask = "01" THEN
-              d_out(7 DOWNTO 0) <= r.reg(addr_natural)(7 DOWNTO 0);
-          ELSIF mask = "10" THEN
-              d_out(15 DOWNTO 8) <= r.reg(addr_natural)(15 DOWNTO 8);			 
-          ELSIF mask = "11" THEN
-              d_out <= r.reg(addr_natural);	
-			 ELSE
-			     d_out <= (OTHERS => 'Z');
-          END IF;	   
-      END IF;
+          d_out <= r.reg(addr_natural);	
+			ELSE
+          d_out <= (OTHERS => 'Z');
+      END IF;	   
   END PROCESS;
 
 END str;

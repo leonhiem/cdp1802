@@ -41,6 +41,7 @@ ARCHITECTURE str OF cs1800 IS
   SIGNAL  tpb  : STD_LOGIC;
   SIGNAL  nmrd  : STD_LOGIC;
   SIGNAL  nmwr  : STD_LOGIC;
+  SIGNAL  nINT  : STD_LOGIC := '1';
 
   SIGNAL n  : STD_LOGIC_VECTOR(2 DOWNTO 0);
   SIGNAL data  : STD_LOGIC_VECTOR(7 DOWNTO 0);
@@ -70,7 +71,7 @@ BEGIN
     TPB      => tpb,
     nMRD     => nmrd,
     nMWR     => nmwr,
-
+    nINT     => nINT,
     reset => reset,
     halt => halt,
     single => single,
