@@ -65,6 +65,42 @@ doc/          original design sketches and simulation screenshots
   implemented per the datasheet.
 - No outstanding `TODO`/`FIXME` markers in the source.
 
+### Fixes brought back from the FPGA port (2026-09-26)
+
+Porting this core to real hardware -- an FPGA running the original CS1800
+rack's own PRCX-18 EPROM -- turned up thirteen defects that the test
+program here never exercised. They are fixed in `src/vhdl/` now. Each one
+is written up, with the datasheet citation, the failure it caused and the
+test that catches it, in **[cdp1802-fpga's core
+review](https://github.com/leonhiem/cdp1802-fpga/blob/main/doc/CDP1802_CORE_REVIEW.md)**
+-- not repeated here.
+
+In brief: `INP` not loading D; `SHRC`/`SHLC` ignoring DF; no S3 cycle when
+IE=0, losing interrupts; bus/address deviations from datasheet Table 2 in
+cycles with no memory access; a spurious read at every interrupt; a DMA
+during a long branch dropping its second execute cycle; `INP`'s write
+strobe running past the end of its cycle; an interrupt taken too early
+after a multi-cycle instruction; a DMA ending an `IDL` instead of
+resuming it; DMA direction re-sampled from the live request lines; an
+8-clock initialization cycle where the datasheet gives it 9; TPA
+suppressed during `IDL` rather than only in LOAD mode; and five
+instructions sampling the data bus a whole clock before a real
+multiplexed-address memory card can have presented the address.
+
+The verification those fixes rest on -- an independent instruction-set
+model in lockstep, exhaustive ALU checks, 1000 random instruction
+streams, DMA/interrupt edge cases, pin-level timing against the datasheet
+waveforms, and the real PRCX-18 OS booting for 295,626 instructions with
+zero mismatches -- lives in that repository too.
+
+`sim/ghdl/reference/` was regenerated to match. Every timestamp after the
+first moves 250 ns later (the initialization cycle is now the datasheet's
+9 clocks, not 8), and the address bus changes in execute cycles that make
+no memory access (Table 2). Cross-checked against `cdp1802-fpga`'s own
+reference traces: the two are identical except where this core's
+bidirectional `DATA` bus reads `ZZ` and the FPGA port's split bus reads a
+driven value -- 0 differences in address, strobes, Q or SC.
+
 ## Simulating
 
 ### ModelSim (original workflow)
@@ -114,7 +150,13 @@ MIT
 
 ## Status
 
-This repository is now frozen as the reference/golden-model snapshot of
-the design prior to its FPGA port: `sim/ghdl/reference/` and the GHDL/xsim
-flows above exist to let that port be verified against this exact
-behavior. Active development continues in `cdp1802-fpga` from here on.
+This repository holds the CDP1802 core itself, in its original form: a
+bidirectional `DATA` bus as the datasheet has it, and the golden test
+program inline in `ram.vhd`. It is no longer a frozen pre-port snapshot --
+it now carries the fixes the FPGA port found (above).
+
+Active development, the CS1800 system around the core, and all the
+verification continue in
+[cdp1802-fpga](https://github.com/leonhiem/cdp1802-fpga). That repository
+splits `DATA` into `DATA_IN`/`DATA_OUT`/`DATA_OE` because FPGA fabric has
+no internal tri-states, and adds debug ports; neither belongs here.

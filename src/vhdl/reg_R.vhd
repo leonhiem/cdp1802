@@ -30,7 +30,26 @@ ENTITY reg_R IS
     mask  : IN  STD_LOGIC_VECTOR(1 DOWNTO 0);
 
     wr    : IN  STD_LOGIC;
-    rd    : IN  STD_LOGIC := '1'
+    rd    : IN  STD_LOGIC := '1';
+
+    -- Exploratory debug taps, 2026-09-15 (see boards/cora-z7-07s/
+    -- BRINGUP_LOG.md's "milestone 3n"): R(A)/R(B) direct, live values
+    -- -- unlike d_out above (which only ever shows whatever register
+    -- the CPU's *own* current instruction happens to be addressing),
+    -- these are unconditional taps into two fixed slots of the
+    -- register file, to watch a specific register's real value across
+    -- many machine cycles regardless of what else is being accessed.
+    -- No real chip pin -- purely additive.
+    dbg_R_A : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+    dbg_R_B : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+
+    -- Same idea, 2026-09-16 (see BRINGUP_LOG.md's "keystroke injection"
+    -- entries): R(1) is the CDP1802's fixed interrupt-vector register
+    -- (X<-2, P<-1 on interrupt, so the next fetch comes from R(1)) --
+    -- watching it directly is the most unambiguous way to confirm
+    -- whether the CPU genuinely took an interrupt and jumped through
+    -- it, versus something else entirely.
+    dbg_R1 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0)
   );
 END reg_R;
 
@@ -43,7 +62,12 @@ TYPE t_reg IS RECORD
     reg : t_reg_arr;
 END RECORD;
 
-SIGNAL r, nxt_r : t_reg;
+-- Explicit power-up value: on the FPGA these flip-flops configure to 0
+-- anyway; without this GHDL starts them at 'U', and real ROM code that
+-- reads a never-written register (PRCX-18 uses R7.lo before ever setting
+-- it) spreads X through the simulation, so sim and hardware diverge.
+-- Reset still only clears R0, as on a real CDP1802.
+SIGNAL r, nxt_r : t_reg := (reg => (OTHERS => (OTHERS => '0')));
 
 BEGIN
 
@@ -82,15 +106,22 @@ BEGIN
 
 
 
+  -- FPGA note: 'rd' is never driven low in this design (no other driver
+  -- ever shares d_out), so this stays a plain address-indexed mux rather
+  -- than a tri-state -- no internal 'Z'.
   p_regR_rd : PROCESS(rd, addr, r)
       VARIABLE addr_natural : NATURAL RANGE 0 TO 15;
   BEGIN
       addr_natural := to_integer(unsigned(addr));
       IF rd = '1' THEN
-          d_out <= r.reg(addr_natural);	
-			ELSE
-          d_out <= (OTHERS => 'Z');
-      END IF;	   
+          d_out <= r.reg(addr_natural);
+      ELSE
+          d_out <= (OTHERS => '0');
+      END IF;
   END PROCESS;
+
+  dbg_R_A <= r.reg(10);
+  dbg_R_B <= r.reg(11);
+  dbg_R1  <= r.reg(1);
 
 END str;

@@ -27,10 +27,31 @@ ENTITY cdp1802 IS
     Q        : OUT   STD_LOGIC;
     SC       : OUT   STD_LOGIC_VECTOR(1 DOWNTO 0);
     nMRD     : OUT   STD_LOGIC;
+    -- FPGA note: split from a single INOUT 'DATA' pin into an explicit
+    -- in/out/output-enable triplet -- no internal 'Z'. This is purely
+    -- internal wiring in cdp18.vhd/cs1800.vhd (never a real chip pin
+    -- there), so the parent does the actual bus merge.
+    -- The real chip's bidirectional data bus. (The cdp1802-fpga repo
+    -- splits this into DATA_IN/DATA_OUT/DATA_OE because FPGA fabric has
+    -- no internal tri-states; here it stays as the datasheet has it, and
+    -- the driver below does the same job.)
     DATA     : INOUT STD_LOGIC_VECTOR(7 DOWNTO 0);
     N        : OUT   STD_LOGIC_VECTOR(2 DOWNTO 0);
     nEF      : IN    STD_LOGIC_VECTOR(3 DOWNTO 0);
     ADDR     : OUT   STD_LOGIC_VECTOR(7 DOWNTO 0);
+    -- FPGA note, 2026-09-15 (see boards/cora-z7-07s/BRINGUP_LOG.md's
+    -- "milestone 3l" and doc/CDP1802_MEMORY_TIMING.md): ADDR's 8-bit,
+    -- time-multiplexed shape (high byte, then low byte, latched by an
+    -- external TPA-triggered register -- real 4042s on the actual
+    -- memory board) exists purely because the real 40-pin chip only
+    -- has 8 address pins. A_full is the same address the CPU already
+    -- holds internally, whole and already-clocked (register A, `p_reg_A`
+    -- below), one machine cycle before ADDR/TPA ever multiplex it onto
+    -- a narrow bus at all -- there is no reason a fully-integrated FPGA
+    -- memory needs to reconstruct that 16 bits back out of ADDR the way
+    -- external hardware must; it can just use this instead. Purely
+    -- additive: ADDR/TPA/every existing instantiation are completely
+    -- unaffected.
     TPA      : OUT   STD_LOGIC;
     TPB      : OUT   STD_LOGIC;
     nMWR     : OUT   STD_LOGIC;
@@ -86,6 +107,8 @@ ARCHITECTURE str OF cdp1802 IS
   SIGNAL wr_D      : STD_LOGIC;
   SIGNAL rd_D      : STD_LOGIC;
   SIGNAL D_in      : STD_LOGIC_VECTOR(7 DOWNTO 0);
+  SIGNAL D_in_amux : STD_LOGIC_VECTOR(7 DOWNTO 0); -- D_in candidate: A-register byte
+  SIGNAL D_in_dmux : STD_LOGIC_VECTOR(7 DOWNTO 0); -- D_in candidate: external bus (DATA_IN)
   SIGNAL D_out     : STD_LOGIC_VECTOR(7 DOWNTO 0);
   SIGNAL alu_in    : STD_LOGIC_VECTOR(7 DOWNTO 0);
   SIGNAL alu_out   : STD_LOGIC_VECTOR(7 DOWNTO 0);
@@ -114,6 +137,9 @@ ARCHITECTURE str OF cdp1802 IS
   SIGNAL DMA_OUT   : STD_LOGIC;
   SIGNAL INT       : STD_LOGIC;
   SIGNAL Go_Idle   : STD_LOGIC;
+  SIGNAL s2_dir_out : STD_LOGIC;
+  SIGNAL DATA_OUT_i : STD_LOGIC_VECTOR(7 DOWNTO 0);
+  SIGNAL DATA_OE_i  : STD_LOGIC;
   SIGNAL Do_MRD    : STD_LOGIC;
   SIGNAL Do_MWR    : STD_LOGIC;
 
@@ -152,6 +178,7 @@ BEGIN
     state      => state,
     clk_cnt_out => clk_cnt,
     Go_Idle    => Go_Idle,
+    s2_dir_out => s2_dir_out,
     Do_MRD     => Do_MRD,
     Do_MWR     => Do_MWR,
     forceS1    => forceS1,
@@ -176,6 +203,7 @@ BEGIN
     P_out     => P_out,
     I_out     => I_out,
     Go_Idle   => Go_Idle,
+    s2_dir_out => s2_dir_out,
     Do_MRD    => Do_MRD,
     Do_MWR    => Do_MWR,
     Q_in      => Q_in,
@@ -207,8 +235,10 @@ BEGIN
     wr_T      => wr_T1,
     N_addr_out => N,
     dma_in    => DMA_IN,
-    dma_out   => DMA_OUT
+    dma_out   => DMA_OUT,
+    dbg_tmp_page => OPEN
   );
+
 
   u_Q : ENTITY work.ff
   PORT MAP (
@@ -358,7 +388,10 @@ BEGIN
     addr  => addr_R,
     mask  => mask_R,
 
-    wr    => wr_R
+    wr    => wr_R,
+    dbg_R_A => OPEN,
+    dbg_R1  => OPEN,
+    dbg_R_B => OPEN
   );
 
   p_reg_A : PROCESS(CLOCK, rst, R_out, wr_A)
@@ -381,19 +414,31 @@ BEGIN
     selA    => addr_lohi,
     outputA => ADDR,
     selD    => A_sel_lohi,
-    outputD => D_in
+    outputD => D_in_amux
   );
 
   u_dmux_D : ENTITY work.dmux
   PORT MAP (
-    float0  => float_DATA,
-    float1  => float_T,
-    rst     => reset_DATA,
-    d_src0  => D_out, 
-    d_src1  => T_out, 
-    d_snk   => D_in,
-    data    => DATA
+    float0   => float_DATA,
+    float1   => float_T,
+    rst      => reset_DATA,
+    d_src0   => D_out,
+    d_src1   => T_out,
+    d_snk    => D_in_dmux,
+    data_in  => DATA,
+    data_out => DATA_OUT_i,
+    data_oe  => DATA_OE_i
   );
+
+  -- D_in used to be driven directly by both amux and dmux (resolved via
+  -- tri-state 'Z': whichever one wasn't selected floated). The two are
+  -- mutually exclusive by construction -- selD picks the A-register
+  -- byte path, otherwise D_in comes from the external bus -- so this is
+  -- now one explicit mux instead of a two-driver resolved signal.
+  -- The tri-state driver the FPGA port had to factor out.
+  DATA <= DATA_OUT_i WHEN DATA_OE_i = '1' ELSE (OTHERS => 'Z');
+
+  D_in <= D_in_amux WHEN (A_sel_lohi = "01" OR A_sel_lohi = "10") ELSE D_in_dmux;
 
   u_alu : ENTITY work.alu
   PORT MAP (
@@ -405,5 +450,6 @@ BEGIN
     carry_in => DF_out,
     carry_out => carry
   );
+
 
 END str;

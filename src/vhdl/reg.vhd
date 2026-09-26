@@ -43,7 +43,12 @@ TYPE t_reg IS RECORD
     reg : STD_LOGIC_VECTOR(g_width-1 DOWNTO 0);
 END RECORD;
 
-SIGNAL r, nxt_r : t_reg;
+-- Explicit power-up value (as in reg_R.vhd): the FPGA configures these
+-- flip-flops to 0 anyway; without it GHDL starts T/D/... at 'U', and a
+-- program that uses a never-written register (e.g. SAV before any
+-- interrupt or MARK) spreads X through the simulation. On a real 1802
+-- they are undefined after reset. rst still behaves as before.
+SIGNAL r, nxt_r : t_reg := (reg => (OTHERS => '0'));
 
 
 
@@ -77,6 +82,9 @@ BEGIN
   END PROCESS;
 
   -- connect
-  d_out <= r.reg WHEN rd = '1' ELSE (OTHERS => 'Z');
+  -- FPGA note: 'rd' is never driven low anywhere this is instantiated
+  -- (no other driver ever shares d_out), so this stays a plain
+  -- single-driver mux rather than a tri-state -- no internal 'Z'.
+  d_out <= r.reg WHEN rd = '1' ELSE (OTHERS => '0');
 
 END str;
