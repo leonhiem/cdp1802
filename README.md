@@ -144,6 +144,16 @@ Runs the same testbenches on Vivado's simulator and diffs the result
 against `sim/ghdl/reference/` — confirmed bit-for-bit identical on both
 designs (Vivado 2024.1). See `sim/xsim/README.md`.
 
+To *watch* the golden test program in `src/vhdl/ram.vhd` execute, use the
+waveform flow instead — `run.sh` elaborates with `--debug off`, so the
+viewer would see nothing:
+
+```
+sim/xsim/wave.sh                 # runs and leaves a .wdb with every signal logged
+xsim --gui sim/xsim/run/cdp18_wave.wdb
+sim/xsim/wave.sh cdp18 --gui     # or open the GUI straight away, at time 0
+```
+
 ## License
 
 MIT

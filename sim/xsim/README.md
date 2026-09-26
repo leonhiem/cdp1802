@@ -25,3 +25,34 @@ Confirmed bit-for-bit identical to the GHDL reference on both designs.
 
 `run/` (xvhdl/xelab/xsim build products and the freshly generated trace)
 is scratch and gitignored.
+
+## Waveforms
+
+`run.sh` elaborates with `--debug off`, because it only wants the text
+trace -- which also means the waveform viewer can see nothing. Use
+`wave.sh` instead to watch the golden test program in `src/vhdl/ram.vhd`
+run, instruction by instruction:
+
+```
+source <Vivado install>/<version>/settings64.sh
+sim/xsim/wave.sh                 # cdp18, batch, leaves a .wdb
+sim/xsim/wave.sh cs1800          # the larger system testbench
+sim/xsim/wave.sh cdp18 --gui     # open the GUI at time 0 and drive it yourself
+```
+
+The batch form elaborates with `--debug typical`, logs every signal
+(`log_wave -r /`, so the CPU's internals are captured, not just the
+testbench top) and runs to completion. Open the result with:
+
+```
+xsim --gui sim/xsim/run/cdp18_wave.wdb
+```
+
+Everything is in the scope tree on the left; drag what you want into the
+wave window. For following the test program: `CLOCK`, `TPA`, `TPB`,
+`ADDR`, `DATA`, `nMRD`, `nMWR`, `SC` and `Q` on the DUT, and inside the
+CPU the `A_out` address register, `D_out`, and the `R` registers.
+
+The waveform runs are real runs, not just elaborations: both targets
+produce a `tb_*_tpb.txt` identical to `sim/ghdl/reference/`, same as
+`run.sh` does. Verified with Vivado Simulator v2024.1.
