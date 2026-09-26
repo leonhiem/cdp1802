@@ -144,15 +144,47 @@ Runs the same testbenches on Vivado's simulator and diffs the result
 against `sim/ghdl/reference/` — confirmed bit-for-bit identical on both
 designs (Vivado 2024.1). See `sim/xsim/README.md`.
 
-To *watch* the golden test program in `src/vhdl/ram.vhd` execute, use the
-waveform flow instead — `run.sh` elaborates with `--debug off`, so the
-viewer would see nothing:
+### Waveforms — watching the test program run (Vivado xsim GUI)
+
+To watch the golden test program in `src/vhdl/ram.vhd` execute
+instruction by instruction, use `wave.sh` rather than `run.sh`: the latter
+elaborates with `--debug off`, which is right for a text-trace check but
+leaves the waveform viewer nothing to show.
 
 ```
-sim/xsim/wave.sh                 # runs and leaves a .wdb with every signal logged
-xsim --gui sim/xsim/run/cdp18_wave.wdb
-sim/xsim/wave.sh cdp18 --gui     # or open the GUI straight away, at time 0
+source <Vivado install>/<version>/settings64.sh
+
+sim/xsim/wave.sh                 # tb_cdp18_dump  (CPU + RAM + I/O)
+sim/xsim/wave.sh cs1800          # tb_cs1800_dump (the larger system)
 ```
+
+Each run elaborates with `--debug typical`, logs every signal in the
+hierarchy (`log_wave -r /`, so the CPU's internals are captured and not
+just the testbench top), runs to completion, and leaves a waveform
+database. Open it with:
+
+```
+xsim --gui sim/xsim/run/cdp18_wave.wdb      # or cs1800_wave.wdb
+```
+
+Or skip the batch run and drive the simulation yourself from time 0:
+
+```
+sim/xsim/wave.sh cdp18 --gui
+```
+
+Everything is in the scope tree on the left; drag what you want into the
+wave window. Useful signals for following the test program:
+
+| where | signals |
+|---|---|
+| on the DUT | `CLOCK`, `TPA`, `TPB`, `ADDR`, `DATA`, `nMRD`, `nMWR`, `SC`, `Q` |
+| inside the CPU | `A_out` (address register), `D_out`, the `R` registers |
+
+The waveform runs are real runs, not just elaborations: each writes a
+`tb_*_tpb.txt` identical to `sim/ghdl/reference/`, the same check
+`run.sh` makes. Verified with Vivado Simulator v2024.1 — except the GUI
+step itself, which was never launched here.
 
 ## License
 
